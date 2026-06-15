@@ -1,0 +1,20 @@
+{
+  "workers": [
+    {
+      "id": 0,
+      "name": "laptop01",
+      "ip_address": "127.0.0.1",
+      "role": "gpu",
+      "arch": "x86_64",
+      "tags": ["laptop", "cuda", "x86"]
+    },
+    {
+      "id": 1,
+      "name": "jetson01",
+      "ip_address": "172.16.12.35",
+      "role": "gpu",
+      "arch": "aarch64",
+      "tags": ["jetson", "cuda"]
+    }
+  ]
+}

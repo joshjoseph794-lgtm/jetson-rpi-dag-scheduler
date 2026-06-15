@@ -1,0 +1,18 @@
+[
+  {
+    "id": 0,
+    "name": "laptop01",
+    "ip": "127.0.0.1",
+    "port": 5000,
+    "protocol": "gRPC",
+    "description": "Master Orchestrator & High-Performance Local Node"
+  },
+  {
+    "id": 1,
+    "name": "jetson01",
+    "ip": "172.16.12.35",
+    "port": 5000,
+    "protocol": "HTTP",
+    "description": "Legacy Ubuntu 18.04 Jetson Nano Edge Node"
+  }
+]

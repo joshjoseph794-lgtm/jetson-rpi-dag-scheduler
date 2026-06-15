@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package runtime;
+
+// The message sent from the Coordinator to an Edge Worker to execute a task
+message TaskRequest {
+    string task_id = 1;
+    string task_type = 2;
+    string script_path = 3;
+    float data_size_mb = 4;
+    string scheduled_start_time = 5; // <-- ADDED: For time-triggered synchronization
+}
+
+// The feedback sent from the Edge Worker back to the Coordinator upon completion
+message TaskResponse {
+    string task_id = 1;
+    string status = 2;          // "SUCCESS" or "FAILED"
+    float execution_time_sec = 3;
+    string error_message = 4;
+}
+
+// Service definition for gRPC orchestration
+service TaskDispatcher {
+    rpc ExecuteTask (TaskRequest) returns (TaskResponse);
+}

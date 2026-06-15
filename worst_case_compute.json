@@ -1,0 +1,17 @@
+{
+    "laptop01": {
+        "Data_Preprocessing": 2.818,
+        "Feature_Extraction": 2.8578,
+        "Model_Training": 2.0358
+    },
+    "jetson01": {
+        "Data_Preprocessing": 2.1756,
+        "Feature_Extraction": 2.2205,
+        "Model_Training": 2.2946
+    },
+    "raspi01": {
+        "Data_Preprocessing": 2.4069,
+        "Feature_Extraction": 2.3974,
+        "Model_Training": 2.451
+    }
+}

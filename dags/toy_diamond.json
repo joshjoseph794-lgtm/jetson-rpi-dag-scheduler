@@ -1,0 +1,31 @@
+{
+  "dag_name": "toy_diamond_test",
+  "nodes": [
+    {
+      "task_id": "A",
+      "task_type": "data_parsing",
+      "base_computation_cost": 10
+    },
+    {
+      "task_id": "B",
+      "task_type": "vision_task",
+      "base_computation_cost": 20
+    },
+    {
+      "task_id": "C",
+      "task_type": "model_inference",
+      "base_computation_cost": 15
+    },
+    {
+      "task_id": "D",
+      "task_type": "data_parsing",
+      "base_computation_cost": 12
+    }
+  ],
+  "edges": [
+    { "from": "A", "to": "B", "data_size_mb": 5.0 },
+    { "from": "A", "to": "C", "data_size_mb": 2.0 },
+    { "from": "B", "to": "D", "data_size_mb": 8.0 },
+    { "from": "C", "to": "D", "data_size_mb": 4.0 }
+  ]
+}

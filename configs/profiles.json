@@ -1,0 +1,27 @@
+{
+  "devices": {
+    "jetson_nano_01": {
+      "type": "edge_gpu",
+      "cores": 128,
+      "task_execution_multipliers": {
+        "vision_task": 0.5,
+        "data_parsing": 1.2,
+        "model_inference": 0.3
+      }
+    },
+    "raspberry_pi_01": {
+      "type": "edge_cpu",
+      "cores": 4,
+      "task_execution_multipliers": {
+        "vision_task": 2.0,
+        "data_parsing": 0.8,
+        "model_inference": 2.5
+      }
+    }
+  },
+  "network_matrix_mbps": {
+    "coordinator_to_jetson_nano_01": 100.0,
+    "coordinator_to_raspberry_pi_01": 100.0,
+    "jetson_nano_01_to_raspberry_pi_01": 50.0
+  }
+}

@@ -1,0 +1,18 @@
+{
+    "Data_Preprocessing": {
+        "script_path": "workloads/synthetic/cpu_task.py",
+        "default_data_size_mb": 2.0
+    },
+    "Feature_Extraction": {
+        "script_path": "workloads/synthetic/cpu_task.py",
+        "default_data_size_mb": 1.5
+    },
+    "Model_Training": {
+        "script_path": "workloads/synthetic/cpu_task.py",
+        "default_data_size_mb": 0.5
+    },
+    "Data_Anomaly_Filter": {
+        "script_path": "workloads/synthetic/filter_task.py",
+        "default_data_size_mb": 1.2
+    }
+}

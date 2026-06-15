@@ -1,0 +1,37 @@
+{
+  "dag_name": "iot_energy_pipeline",
+  "nodes": [
+    {
+      "task_id": "ingest_sensors",
+      "task_type": "data_parsing",
+      "base_computation_cost": 8
+    },
+    {
+      "task_id": "filter_anomalies",
+      "task_type": "data_parsing",
+      "base_computation_cost": 15
+    },
+    {
+      "task_id": "calculate_load_forecast",
+      "task_type": "model_inference",
+      "base_computation_cost": 45
+    },
+    {
+      "task_id": "compress_telemetry",
+      "task_type": "data_parsing",
+      "base_computation_cost": 12
+    },
+    {
+      "task_id": "upload_summary",
+      "task_type": "data_parsing",
+      "base_computation_cost": 5
+    }
+  ],
+  "edges": [
+    { "from": "ingest_sensors", "to": "filter_anomalies", "data_size_mb": 1.2 },
+    { "from": "filter_anomalies", "to": "calculate_load_forecast", "data_size_mb": 0.5 },
+    { "from": "filter_anomalies", "to": "compress_telemetry", "data_size_mb": 2.5 },
+    { "from": "calculate_load_forecast", "to": "upload_summary", "data_size_mb": 0.1 },
+    { "from": "compress_telemetry", "to": "upload_summary", "data_size_mb": 0.4 }
+  ]
+}

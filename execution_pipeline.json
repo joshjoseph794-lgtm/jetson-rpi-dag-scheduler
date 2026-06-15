@@ -1,0 +1,16 @@
+[
+    {
+        "task_id": "T1",
+        "task_type": "Data_Preprocessing"
+    },
+    {
+        "task_id": "T2",
+        "task_type": "Feature_Extraction",
+        "dependencies": ["T1"]
+    },
+    {
+        "task_id": "T3",
+        "task_type": "Model_Training",
+        "dependencies": ["T2"]
+    }
+]

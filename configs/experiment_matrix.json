@@ -1,0 +1,27 @@
+{
+  "test_suite_name": "Edge_Scheduler_Baseline_Comparison",
+  "global_settings": {
+    "iterations_per_config": 5,
+    "output_directory": "outputs/plots/"
+  },
+  "matrix": [
+    {
+      "experiment_id": "exp_01_baseline_vision",
+      "algorithm": "baseline",
+      "workload_dag": "dags/vision_pipeline.json",
+      "enabled": true
+    },
+    {
+      "experiment_id": "exp_02_heft_vision",
+      "algorithm": "heft",
+      "workload_dag": "dags/vision_pipeline.json",
+      "enabled": true
+    },
+    {
+      "experiment_id": "exp_03_peft_vision",
+      "algorithm": "peft",
+      "workload_dag": "dags/vision_pipeline.json",
+      "enabled": true
+    }
+  ]
+}

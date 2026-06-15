@@ -1,1 +1,12 @@
+# Ignore the Python Virtual Environment
 .venv/
+__pycache__/
+*.pyc
+
+# Ignore OS-specific system files
+.DS_Store
+Thumbs.db
+
+# Optional: Ignore local performance profiles if you don't want them on GitHub
+ worst_case_compute.json
+ worst_case_network.json

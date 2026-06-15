@@ -1,16 +1,31 @@
 {
-  "pipeline_name": "vision_inference_pipeline",
-  "num_processors": 2,
   "tasks": [
-    {"id": 0, "name": "frame_capture", "costs": [12, 18]},
-    {"id": 1, "name": "preprocessing", "costs": [8, 15]},
-    {"id": 2, "name": "object_detection", "costs": [35, 20]},
-    {"id": 3, "name": "data_logging", "costs": [5, 7]}
+    {
+      "id": 0,
+      "name": "Data_Preprocessing",
+      "base_execution_cost_ms": 2000
+    },
+    {
+      "id": 1,
+      "name": "Feature_Extraction",
+      "base_execution_cost_ms": 1500
+    },
+    {
+      "id": 2,
+      "name": "Model_Training",
+      "base_execution_cost_ms": 3000
+    }
   ],
-  "edges": [
-    {"source": 0, "target": 1, "communication_cost": 15},
-    {"source": 0, "target": 2, "communication_cost": 25},
-    {"source": 1, "target": 3, "communication_cost": 10},
-    {"source": 2, "target": 3, "communication_cost": 30}
+  "dependencies": [
+    {
+      "parent": 0,
+      "child": 1,
+      "data_size_mb": 25.0
+    },
+    {
+      "parent": 1,
+      "child": 2,
+      "data_size_mb": 40.0
+    }
   ]
 }
