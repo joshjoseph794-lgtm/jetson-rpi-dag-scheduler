@@ -15,7 +15,6 @@ def profile_execution(script_path, *args):
     Returns:
         dict: Telemetry results containing status, duration, and system codes.
     """
-    # Safeguard: Ensure the target script actually exists before running it
     if not os.path.exists(script_path):
         return {
             "status": "FAILED",
@@ -25,14 +24,10 @@ def profile_execution(script_path, *args):
 
     print(f"⏱️ [PROFILER] Monitoring execution process for: {script_path}")
     
-    # Build the execution command (e.g., ['python3', 'workloads/vision/preprocess.py', 'arg1'])
     cmd = [sys.executable, script_path] + list(args)
-    
-    # Start high-resolution monotonic profiling timer
     start_time = time.perf_counter()
     
     try:
-        # Run the script and capture console streams to avoid cluttering main logs
         result = subprocess.run(
             cmd,
             stdout=subprocess.PIPE,
@@ -41,7 +36,6 @@ def profile_execution(script_path, *args):
             timeout=120  # 2-minute safety guardrail timeout per task
         )
         
-        # Stop high-resolution timer
         end_time = time.perf_counter()
         duration = end_time - start_time
         
@@ -75,17 +69,19 @@ def profile_execution(script_path, *args):
             "error_message": str(e)
         }
 
-# Simple test block to let you run this file directly to test itself
 if __name__ == "__main__":
     print("--- Testing Execution Profiler Isolation Layer ---")
-    # Let's create a dummy file to test if it profiles correctly
     test_file = "test_workload.py"
-    with open(test_file, "w") as f:
-        f.write("import time\nprint('Processing data...')\ntime.sleep(0.5)")
-        
-    metrics = profile_execution(test_file)
-    print("Profile Output Dictionary:", metrics)
     
-    # Clean up the dummy file
-    if os.path.exists(test_file):
-        os.remove(test_file)
+    try:
+        with open(test_file, "w") as f:
+            f.write("import time\nprint('Processing data...')\ntime.sleep(0.5)")
+            
+        metrics = profile_execution(test_file)
+        print("Profile Output Dictionary:", metrics)
+        
+    finally:
+        # Guarantee cleanup even if an unexpected exception occurs during test setup
+        if os.path.exists(test_file):
+            os.remove(test_file)
+            print("🧹 Temporary test file cleaned up successfully.")

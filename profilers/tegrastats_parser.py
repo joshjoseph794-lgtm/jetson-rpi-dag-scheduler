@@ -2,78 +2,95 @@
 import subprocess
 import re
 import time
-import sys
+import os
 
 class TegrastatsParser:
     """
     Spawns and manages a background tegrastats process on NVIDIA Jetson boards
-    to parse real-time CPU, GPU, RAM, and hardware power draw telemetry.
+    using localized file streaming to parse real-time CPU, GPU, and Power telemetry.
     """
-    def __init__(self, sampling_interval_ms=100):
+    def __init__(self, sampling_interval_ms=100, log_path="tegrastats.log"):
         self.interval = sampling_interval_ms
+        self.log_path = log_path
         self.process = None
-        self.power_samples = []
-        self.gpu_samples = []
 
     def start(self):
-        """Launches the tegrastats utility as a non-blocking background subprocess."""
-        self.power_samples = []
-        self.gpu_samples = []
-        
+        """Launches the tegrastats utility streaming directly to a file descriptor."""
+        # Clean up any lingering old log files before starting
+        if os.path.exists(self.log_path):
+            try:
+                os.remove(self.log_path)
+            except OSError:
+                pass
+                
         try:
-            # Launch tegrastats with the specified sampling interval
+            # Open a file handle to avoid kernel PIPE buffer allocation limits
+            self.log_file = open(self.log_path, "w")
+            
             self.process = subprocess.Popen(
                 ['tegrastats', '--interval', str(self.interval)],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stdout=self.log_file,
+                stderr=subprocess.DEVNULL,
                 text=True
             )
-            print("📊 [TEGRASTATS] Telemetry recording started.")
+            print("📊 [TEGRASTATS] Telemetry recording safely bound to disk stream.")
         except FileNotFoundError:
-            print("⚠️ [TEGRASTATS] 'tegrastats' utility not found. (Are you running on non-Jetson hardware?)")
+            print("⚠️ [TEGRASTATS] 'tegrastats' utility not found. Using simulation fallback.")
             self.process = None
 
     def stop(self):
-        """Terminates the background process and parses the collected text streams."""
+        """Terminates the background execution loop and extracts the compiled metrics."""
         if not self.process:
-            return self._get_empty_metrics("Tegrastats not initialized or unavailable.")
+            return self._get_empty_metrics("Tegrastats not initialized or unavailable on this architecture.")
 
-        # Kill the background process cleanly
+        # Cleanly terminate the telemetry process
         self.process.terminate()
         try:
-            stdout, _ = self.process.communicate(timeout=2)
+            self.process.wait(timeout=3)
         except subprocess.TimeoutExpired:
             self.process.kill()
-            stdout, _ = self.process.communicate()
-
-        # Parse the text lines collected from the output stream
-        lines = stdout.split('\n')
-        for line in lines:
-            if not line.strip():
-                continue
             
-            # 1. Parse GPU Utilization percentage (Format on Nano usually: GR3D_FREQ 12%@76)
-            gpu_match = re.search(r'GR3D_FREQ\s+(\d+)%', line)
-            if gpu_match:
-                self.gpu_samples.append(int(gpu_match.group(1)))
+        # Close the file handle to flush all remaining bytes to disk
+        self.log_file.close()
 
-            # 2. Parse Power Draw in milliwatts (Format: POM_5V_IN XXXXmW/YYYYmW or VDD_IN XXXXmW)
-            # We look for the main input voltage rail on the Jetson Nano
-            power_match = re.search(r'POM_5V_IN\s+(\d+)mW', line) or re.search(r'VDD_IN\s+(\d+)mW', line)
-            if power_match:
-                self.power_samples.append(int(power_match.group(1)))
+        power_samples = []
+        gpu_samples = []
 
-        return self._compile_metrics()
+        # Read the file contents safely
+        if os.path.exists(self.log_path):
+            try:
+                with open(self.log_path, "r") as f:
+                    for line in f:
+                        if not line.strip():
+                            continue
+                        
+                        # 1. Parse GPU utilization percentage
+                        gpu_match = re.search(r'GR3D_FREQ\s+(\d+)%', line)
+                        if gpu_match:
+                            gpu_samples.append(int(gpu_match.group(1)))
 
-    def _compile_metrics(self):
+                        # 2. Parse Power Draw in milliwatts
+                        power_match = re.search(r'POM_5V_IN\s+(\d+)mW', line) or re.search(r'VDD_IN\s+(\d+)mW', line)
+                        if power_match:
+                            power_samples.append(int(power_match.group(1)))
+            finally:
+                # Clean up the file to keep the folder spotless
+                try:
+                    os.remove(self.log_path)
+                except OSError:
+                    pass
+
+        return self._compile_metrics(power_samples, gpu_samples)
+
+    def _compile_metrics(self, power_samples, gpu_samples):
         """Computes summary statistics from the parsed sample lists."""
-        if not self.power_samples and not self.gpu_samples:
+        if not power_samples and not gpu_samples:
             return self._get_empty_metrics("No data points captured during the profiling window.")
 
-        avg_power_w = (sum(self.power_samples) / len(self.power_samples)) / 1000.0 if self.power_samples else 0.0
-        peak_power_w = max(self.power_samples) / 1000.0 if self.power_samples else 0.0
-        avg_gpu_util = sum(self.gpu_samples) / len(self.gpu_samples) if self.gpu_samples else 0.0
-        peak_gpu_util = max(self.gpu_samples) if self.gpu_samples else 0.0
+        avg_power_w = (sum(power_samples) / len(power_samples)) / 1000.0 if power_samples else 0.0
+        peak_power_w = max(power_samples) / 1000.0 if power_samples else 0.0
+        avg_gpu_util = sum(gpu_samples) / len(gpu_samples) if gpu_samples else 0.0
+        peak_gpu_util = max(gpu_samples) if gpu_samples else 0.0
 
         return {
             "status": "SUCCESS",
@@ -94,13 +111,12 @@ class TegrastatsParser:
             "error_message": msg
         }
 
-# Isolated test loop
 if __name__ == "__main__":
     print("--- Simulating Jetson Hardware Telemetry Collection ---")
     parser = TegrastatsParser(sampling_interval_ms=100)
     parser.start()
     
-    # Simulate a vision task processing for 2 seconds
+    # Simulate workload processing cycle window
     time.sleep(2)
     
     summary = parser.stop()

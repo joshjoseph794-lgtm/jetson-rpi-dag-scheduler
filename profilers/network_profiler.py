@@ -16,10 +16,7 @@ def measure_bandwidth(target_ip, port=5001, payload_size_mb=5):
     Returns:
         float: Calculated throughput speed in Megabytes per second (MB/s).
     """
-    # Generate a dummy byte array matching the requested payload size
-    # 1 MB = 1024 * 1024 bytes
     bytes_to_send = b'X' * (payload_size_mb * 1024 * 1024)
-    total_bytes = len(bytes_to_send)
     
     print(f"📡 [NET_PROFILER] Initializing {payload_size_mb}MB link test to {target_ip}:{port}...")
     
@@ -27,8 +24,11 @@ def measure_bandwidth(target_ip, port=5001, payload_size_mb=5):
     sock.settimeout(7.0) # Prevent the script from hanging forever if a node drops
     
     try:
-        start_time = time.perf_counter()
+        # 1. Connect first to resolve handshakes outside of the timer window
         sock.connect((target_ip, port))
+        
+        # 2. Start high-resolution monotonic timer right before transmission
+        start_time = time.perf_counter()
         
         # Send the entire chunk of data across the network pipe
         sock.sendall(bytes_to_send)
@@ -38,7 +38,6 @@ def measure_bandwidth(target_ip, port=5001, payload_size_mb=5):
         end_time = time.perf_counter()
         
         elapsed_time = end_time - start_time
-        # Throughput formula: Megabytes / Seconds
         throughput_mb_s = payload_size_mb / elapsed_time
         
         print(f"📊 [NET_PROFILER] Transfer complete in {elapsed_time:.4f}s | Speed: {throughput_mb_s:.2f} MB/s")
@@ -46,7 +45,6 @@ def measure_bandwidth(target_ip, port=5001, payload_size_mb=5):
         
     except Exception as e:
         print(f"⚠️ [NET_PROFILER] Bandwidth test failed to {target_ip}: {e}", file=sys.stderr)
-        # Fallback benchmark baseline if network measurements fail
         print("🔄 [NET_PROFILER] Falling back to standard handbook baseline: 117.0 MB/s")
         return 117.0
     finally:
@@ -68,7 +66,6 @@ def start_network_test_receiver(port=5001):
         while True:
             client_socket, addr = server_socket.accept()
             try:
-                # Keep sucking bytes out of the stream until transmission ends
                 while True:
                     data = client_socket.recv(65536) # 64KB buffer blocks
                     if not data:
@@ -85,7 +82,6 @@ def start_network_test_receiver(port=5001):
         server_socket.close()
 
 if __name__ == "__main__":
-    # If run directly without arguments, act as the listener daemon for testing
     if len(sys.argv) > 1 and sys.argv[1] == "--server":
         start_network_test_receiver()
     else:

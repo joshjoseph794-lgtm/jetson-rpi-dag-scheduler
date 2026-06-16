@@ -1,9 +1,10 @@
-# coordinator.py
+# runtime/coordinator.py
 import json
 import time
 import grpc
 import concurrent.futures
 import networkx as nx
+import os
 
 # Import your newly compiled gRPC stubs
 from runtime import messages_pb2
@@ -27,7 +28,6 @@ try:
     with open("config/cluster_nodes.json", "r") as f:
         nodes_list = json.load(f)
 except FileNotFoundError:
-    # Fallback to alternative directory if folder layout varies
     with open("configs/cluster_nodes.json", "r") as f:
         nodes_list = json.load(f)
 
@@ -43,10 +43,10 @@ NODE_CHANNELS = {
 # Define a representation for our Directed Acyclic Graph (DAG) Tasks
 class DAGTask:
     def __init__(self, task_id, task_type, script_path, data_size_mb, dependencies=None):
-        self.id = task_id
+        self.id = str(task_id)  # Uniform string identifiers
         self.type = task_type
         self.script_path = script_path
-        self.data_size_mb = data_size_mb
+        self.data_size_mb = float(data_size_mb)
         self.dependencies = dependencies if dependencies else []
         self.rank = 0.0
         self.assigned_node = None
@@ -54,10 +54,54 @@ class DAGTask:
         self.heft_finish_offset = 0.0
 
 # ==========================================
-# 2. THE CORE HEFT ALGORITHM ENGINE (FIXED)
+# 2. UNIVERSAL DATAG SCHEMA NORMALIZATION
+# ==========================================
+def normalize_coordinator_dag(dag_data, registry):
+    """
+    Translates any incoming DAG schema variety into a uniform dictionary 
+    object list that the coordinator can cleanly process.
+    """
+    if isinstance(dag_data, list):
+        # Raw legacy layout format support
+        return dag_data
+        
+    normalized = []
+    nodes = dag_data.get("nodes", dag_data.get("tasks", []))
+    edges = dag_data.get("edges", dag_data.get("dependencies", []))
+    
+    for node in nodes:
+        task_id = str(node.get("task_id", node.get("id")))
+        task_type = node.get("task_type", node.get("name"))
+        
+        # Pull edge data dependencies targeting this node
+        dependencies = []
+        data_size = None
+        
+        for edge in edges:
+            child = str(edge.get("to", edge.get("child")))
+            parent = str(edge.get("from", edge.get("parent")))
+            if child == task_id:
+                dependencies.append(parent)
+                # Keep tracking data sizes if explicitly mapped on the edge metadata
+                if "data_size_mb" in edge:
+                    data_size = float(edge["data_size_mb"])
+                    
+        # Fallback to registry default data size if edge metadata doesn't declare it
+        if data_size is None:
+            data_size = float(registry.get(task_type, {}).get("default_data_size_mb", 1.5))
+            
+        normalized.append({
+            "task_id": task_id,
+            "task_type": task_type,
+            "dependencies": dependencies,
+            "data_size_mb": data_size
+        })
+    return normalized
+
+# ==========================================
+# 3. THE CORE HEFT ALGORITHM ENGINE
 # ==========================================
 def calculate_heft_schedule(tasks):
-    # Construct a temporary directed graph to safely establish topological sorting limits
     g = nx.DiGraph()
     task_map = {t.id: t for t in tasks}
     
@@ -66,7 +110,6 @@ def calculate_heft_schedule(tasks):
         for dep in t.dependencies:
             g.add_edge(dep.id, t.id)
             
-    # Traversed strictly bottom-up based on true graph dependencies
     topo_order = list(nx.topological_sort(g))
     
     for t_id in reversed(topo_order):
@@ -87,7 +130,6 @@ def calculate_heft_schedule(tasks):
             
         task.rank = avg_compute + max_successor_cost
     
-    # Sort tasks in descending order of upward rank
     scheduled_tasks = sorted(tasks, key=lambda t: t.rank, reverse=True)
     
     node_available_time = {node: 0.0 for node in NODE_CHANNELS}
@@ -140,7 +182,7 @@ def calculate_heft_schedule(tasks):
     return scheduled_tasks
 
 # ==========================================
-# 3. DISPATCH EXECUTOR & TIME-TRIGGER INJECTION
+# 4. DISPATCH EXECUTOR & TIME-TRIGGER
 # ==========================================
 def dispatch_task(task, dag_start_epoch):
     target_trigger_epoch = dag_start_epoch + task.heft_start_offset
@@ -181,51 +223,72 @@ def dispatch_task(task, dag_start_epoch):
             else:
                 print(f"❌ [DISPATCHER] HTTP Error Code received from Node on {task.id}: {res.status_code}")
         except Exception as e:
-            print(f"❌ [DISPATCHER] HTTP Link Critical Failure on {task.id}: {e}")
+            print(f"❌ [DISPATCHER] gRPC Link Critical Failure on {task.id}: {e}")
 
 # ==========================================
-# 4. DYNAMIC MAIN EXECUTION PIPELINE
+# 5. DYNAMIC MAIN EXECUTION PIPELINE
 # ==========================================
 if __name__ == "__main__":
     print("=========================================================")
     print("🏁 INITIALIZING STATIC TIME-TRIGGERED HEFT COORDINATOR")
     print("=========================================================")
     
+    # Dynamically locate the target DAG active in the experiment matrix config
+    target_dag_file = "execution_pipeline.json" # Fallback Default
+    try:
+        matrix_path = "configs/experiment_matrix.json" if os.path.exists("configs/experiment_matrix.json") else "config/experiment_matrix.json"
+        with open(matrix_path, "r") as f:
+            matrix_data = json.load(f)
+            # Support both object config or array blocks
+            if isinstance(matrix_data, list) and len(matrix_data) > 0:
+                target_dag_file = matrix_data[0].get("workload_dag", target_dag_file)
+            elif isinstance(matrix_data, dict):
+                target_dag_file = matrix_data.get("workload_dag", target_dag_file)
+        print(f"🎯 [MATRIX] Targeting Active Execution File: {target_dag_file}")
+    except Exception:
+        print(f"⚠️ [MATRIX] Could not load matrix setup. Defaulting to: {target_dag_file}")
+
     try:
         with open("task_registry.json", "r") as f:
             registry = json.load(f)
-        with open("execution_pipeline.json", "r") as f:
-            pipeline_definition = json.load(f)
+        with open(target_dag_file, "r") as f:
+            pipeline_raw = json.load(f)
         print("📁 [CONFIG] Successfully parsed task registry and active pipeline files.")
     except Exception as e:
         print(f"❌ [CONFIG] Critical Error loading configuration JSON files: {e}")
         exit(1)
 
+    # Normalize our target structural dataset
+    normalized_pipeline = normalize_coordinator_dag(pipeline_raw, registry)
+
     task_lookup = {}
     dag_topology = []
 
-    for block in pipeline_definition:
+    # Map uniform DAG objects
+    for block in normalized_pipeline:
         t_id = block["task_id"]
         t_type = block["task_type"]
+        data_size = block["data_size_mb"]
         
         if t_type not in registry:
             print(f"❌ [CONFIG] Error: Task type '{t_type}' requested by {t_id} is missing from task_registry.json!")
             exit(1)
             
         script_path = registry[t_type]["script_path"]
-        data_size = registry[t_type]["default_data_size_mb"]
         
         task_obj = DAGTask(task_id=t_id, task_type=t_type, script_path=script_path, data_size_mb=data_size)
         task_lookup[t_id] = task_obj
         dag_topology.append(task_obj)
 
-    for block in pipeline_definition:
+    # Link up parent references
+    for block in normalized_pipeline:
         t_id = block["task_id"]
         deps = block.get("dependencies", [])
         
         for dep_id in deps:
-            if dep_id in task_lookup:
-                task_lookup[t_id].dependencies.append(task_lookup[dep_id])
+            dep_str = str(dep_id)
+            if dep_str in task_lookup:
+                task_lookup[t_id].dependencies.append(task_lookup[dep_str])
             else:
                 print(f"❌ [CONFIG] Dependency Error: Task {t_id} references an unknown parent '{dep_id}'")
                 exit(1)

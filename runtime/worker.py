@@ -5,6 +5,7 @@ import time
 import socket
 import sys
 import os
+import threading
 
 # Ensure Python can find our local packages if run from different directories
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -27,7 +28,8 @@ except ModuleNotFoundError:
         def stop(self): return {"avg_power_watts": 2.1, "peak_gpu_utilization_pct": 12}
     class PowerMeterReader:
         def start(self): pass
-        def stop(self): return {"avg_power_watts": 15.4}
+        def sample_load(self): pass
+        def stop(self): return {"avg_power_watts": 4.2}
 
 class TaskDispatcherServicer(messages_pb2_grpc.TaskDispatcherServicer):
     """
@@ -43,9 +45,12 @@ class TaskDispatcherServicer(messages_pb2_grpc.TaskDispatcherServicer):
         script_path = request.script_path
         data_size_mb = request.data_size_mb
         
-        # --- PHASE 4 UPGRADE: EXTRACT SCHEDULED START TIME FROM GRPC PROTO ---
+        # Extract time-triggered synchronization parameters safely
         scheduled_start_time_str = getattr(request, "scheduled_start_time", "0.0")
-        scheduled_start_time = float(scheduled_start_time_str) if scheduled_start_time_str else 0.0
+        try:
+            scheduled_start_time = float(scheduled_start_time_str) if scheduled_start_time_str else 0.0
+        except ValueError:
+            scheduled_start_time = 0.0
         
         print(f"\n📥 [WORKER] Received Task {task_id} via gRPC ({task_type})")
         print(f"📂 [WORKER] Target Payload Script: {script_path} | Input Size: {data_size_mb} MB")
@@ -65,34 +70,49 @@ class TaskDispatcherServicer(messages_pb2_grpc.TaskDispatcherServicer):
                 print(f"⚠️ [CLOCK GATE] Task arrived late by {current_time - scheduled_start_time:.4f}s. Executing immediately.")
 
         # 1. Dynamically initialize the correct hardware telemetry profiler
-        if "jetson" in self.hardware_type:
+        is_jetson = "jetson" in self.hardware_type or "nvidia" in self.hardware_type
+        if is_jetson:
             telemetry_profiler = TegrastatsParser(sampling_interval_ms=100)
+            bg_sampler_active = False
         else:
             telemetry_profiler = PowerMeterReader()
+            bg_sampler_active = True
 
-        # 2. STABLE FALLBACK MECHANISM FOR DURATION
-        try:
-            allocated_duration = str(request.payload_duration) if request.payload_duration > 0 else "1.5"
-        except (AttributeError, ValueError, TypeError):
-            allocated_duration = "1.5"
-        
-        print(f"⏳ [WORKER] Spinning up hardware telemetry recorders...")
-        
         execution_time = 1.50
         error_msg = ""
         status_flag = "SUCCESS"
         
+        # Define a safe default task run duration window
+        allocated_duration = "2.0" 
+        
         try:
             telemetry_profiler.start()
             
-            # 3. Trigger LIVE execution of our unified task harness script
+            # If using a software model (like on Raspberry Pi), spin up a background sampling thread
+            stop_sampling = threading.Event()
+            def poll_loop():
+                while not stop_sampling.is_set():
+                    telemetry_profiler.sample_load()
+                    time.sleep(0.1)
+
+            if bg_sampler_active:
+                sampler_thread = threading.Thread(target=poll_loop, daemon=True)
+                sampler_thread.start()
+            
+            # 2. Trigger LIVE execution of our unified task harness script
+            print(f"⏳ [WORKER] Spinning up hardware telemetry recorders...")
             execution_results = profile_execution(
-                script_path,                  # "workloads/synthetic/cpu_task.py"
-                "--task", task_type,          # Pass task name block (e.g., "Capture")
-                "--duration", allocated_duration # Pass execution window cost
+                script_path,
+                "--task", task_type,
+                "--duration", allocated_duration
             )
             
-            # 4. Halt hardware telemetry monitoring and compile metrics
+            # Tear down background sampling thread if running
+            if bg_sampler_active:
+                stop_sampling.set()
+                sampler_thread.join(timeout=1)
+            
+            # 3. Halt hardware telemetry monitoring and compile metrics
             hardware_telemetry = telemetry_profiler.stop()
             
             execution_time = float(execution_results.get("execution_time_sec", 1.50))
@@ -101,7 +121,7 @@ class TaskDispatcherServicer(messages_pb2_grpc.TaskDispatcherServicer):
             
             if status_flag == "SUCCESS":
                 print(f"✅ [WORKER] Task {task_id} processed cleanly.")
-                print(f"📊 [TELEMETRY] Avg Power: {hardware_telemetry.get('avg_power_watts', 0)}W")
+                print(f"📊 [TELEMETRY] Avg Power Consumption: {hardware_telemetry.get('avg_power_watts', 0)}W")
             else:
                 print(f"❌ [WORKER] Task {task_id} processing crashed: {error_msg}")
 
@@ -110,7 +130,7 @@ class TaskDispatcherServicer(messages_pb2_grpc.TaskDispatcherServicer):
             status_flag = "FAILED"
             error_msg = str(e)
 
-        # 5. Return clean proto message structure back over the network link
+        # 4. Return clean proto message structure back over the network link
         return messages_pb2.TaskResponse(
             task_id=str(task_id),
             status=status_flag,
@@ -118,21 +138,27 @@ class TaskDispatcherServicer(messages_pb2_grpc.TaskDispatcherServicer):
             error_message=error_msg
         )
 
-def serve(port=50051):
-    # Robust hardware profile detection via environment and naming analysis
-    hostname = socket.gethostname().lower()
-    current_dir = os.path.abspath(os.path.dirname(__file__))
-    
-    if "jetson" in hostname or "nvidia" in hostname or "/home/jetson/" in current_dir:
-        hardware_type = "nvidia_jetson_nano"
-        print("🎯 [DETECTION] Confirmed execution environment: Jetson Nano Physical Hardware.")
+def serve(port=50051, hardware_override=None):
+    if hardware_override:
+        hardware_type = hardware_override
+        print(f"🎯 [DETECTION] Using explicit command-line override: {hardware_type}")
     else:
-        hardware_type = "laptop_generic"
-        print("💻 [DETECTION] Confirmed execution environment: Standard Host Computer/Laptop.")
+        # Robust hardware profile detection via environment and naming analysis
+        hostname = socket.gethostname().lower()
+        current_dir = os.path.abspath(os.path.dirname(__file__))
+        
+        if "jetson" in hostname or "nvidia" in hostname or "/home/jetson" in current_dir:
+            hardware_type = "nvidia_jetson_nano"
+            print("🎯 [DETECTION] Confirmed execution environment: Jetson Nano Physical Hardware.")
+        elif "raspberry" in hostname or "pi-" in hostname or os.path.exists("/sys/firmware/devicetree/base/model"):
+            hardware_type = "raspberry_pi"
+            print("🎯 [DETECTION] Confirmed execution environment: Raspberry Pi Edge Node.")
+        else:
+            hardware_type = "laptop_generic"
+            print("💻 [DETECTION] Confirmed execution environment: Standard Host Computer/Laptop.")
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     
-    # Register our servicer handler with the server stack
     messages_pb2_grpc.add_TaskDispatcherServicer_to_server(
         TaskDispatcherServicer(hardware_type=hardware_type), server
     )
@@ -150,11 +176,21 @@ def serve(port=50051):
         server.stop(0)
 
 if __name__ == "__main__":
-    # Allow dynamic port assignment from command line, default to 50051 for Laptop gRPC
+    # Parsing simple command line parameters: python3 worker.py [port] [--hardware override]
     target_port = 50051
-    if len(sys.argv) > 1:
+    hardware_override = None
+    
+    args = sys.argv[1:]
+    if args:
         try:
-            target_port = int(sys.argv[1])
+            target_port = int(args[0])
+            args = args[1:]
         except ValueError:
             pass
-    serve(port=target_port)
+            
+    if "--hardware" in args:
+        idx = args.index("--hardware")
+        if idx + 1 < len(args):
+            hardware_override = args[idx + 1]
+
+    serve(port=target_port, hardware_override=hardware_override)
