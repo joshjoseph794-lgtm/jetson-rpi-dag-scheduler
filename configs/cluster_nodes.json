@@ -1,18 +1,35 @@
 [
   {
     "id": 0,
-    "name": "laptop01",
+    "name": "laptop",
     "ip": "127.0.0.1",
-    "port": 5000,
-    "protocol": "gRPC",
-    "description": "Master Orchestrator & High-Performance Local Node"
+    "port": 50051,
+    "protocol": "grpc",
+    "role": "gpu",
+    "arch": "x86_64",
+    "tags": ["laptop", "cuda", "x86"],
+    "description": "Master Orchestrator & High-Performance Local gRPC Node"
   },
   {
     "id": 1,
-    "name": "jetson01",
+    "name": "jetson",
     "ip": "172.16.12.35",
     "port": 5000,
-    "protocol": "HTTP",
+    "protocol": "http",
+    "role": "gpu",
+    "arch": "aarch64",
+    "tags": ["jetson", "cuda"],
     "description": "Legacy Ubuntu 18.04 Jetson Nano Edge Node"
+  },
+  {
+    "id": 2,
+    "name": "raspberry_pi",
+    "ip": "10.50.119.243",
+    "port": 5001,
+    "protocol": "http",
+    "role": "cpu",
+    "arch": "aarch64",
+    "tags": ["raspberry_pi", "arm"],
+    "description": "Raspberry Pi Worker Edge Node"
   }
 ]

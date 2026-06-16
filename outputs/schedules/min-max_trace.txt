@@ -1,0 +1,10 @@
+=== PHYSICAL SCHEDULE TRACE FOR LOG: EXP_05_MINMAX_VISION ===
+Algorithm Strategy: MIN-MAX
+Calculated Pipeline Makespan: 4.5000s
+Workload Profile CCR Value : 1.0000
+------------------------------------------------------------
+Task Index   | Assigned Node   | EST (s)    | EFT (s)   
+------------------------------------------------------------
+Task 0       | laptop          | 0.0000     | 1.5000    
+Task 1       | laptop          | 1.5000     | 3.0000    
+Task 2       | laptop          | 3.0000     | 4.5000    

@@ -1,27 +1,62 @@
 {
-  "test_suite_name": "Edge_Scheduler_Baseline_Comparison",
+  "test_suite_name": "Heterogeneous_DAG_Scheduler_Benchmark_Suite",
   "global_settings": {
     "iterations_per_config": 5,
-    "output_directory": "outputs/plots/"
+    "metrics_log_file": "outputs/benchmark_results.json"
   },
   "matrix": [
     {
       "experiment_id": "exp_01_baseline_vision",
       "algorithm": "baseline",
-      "workload_dag": "dags/vision_pipeline.json",
+      "workload_dag": "execution_pipeline.json",
       "enabled": true
     },
     {
       "experiment_id": "exp_02_heft_vision",
       "algorithm": "heft",
-      "workload_dag": "dags/vision_pipeline.json",
+      "workload_dag": "execution_pipeline.json",
       "enabled": true
     },
     {
       "experiment_id": "exp_03_peft_vision",
       "algorithm": "peft",
+      "workload_dag": "execution_pipeline.json",
+      "enabled": true
+    },
+    {
+      "experiment_id": "exp_04_cpop_vision",
+      "algorithm": "cpop",
+      "workload_dag": "execution_pipeline.json",
+      "enabled": true
+    },
+    {
+      "experiment_id": "exp_05_minmax_vision",
+      "algorithm": "min-max",
+      "workload_dag": "execution_pipeline.json",
+      "enabled": true
+    },
+
+    {
+      "experiment_id": "exp_energy_heft",
+      "algorithm": "heft",
+      "workload_dag": "dags/energy_pipeline.json",
+      "enabled": true
+    },
+    {
+      
+      "experiment_id": "exp_diamond_heft",
+      "algorithm": "heft",
+      "workload_dag": "dags/toy_diamond.json",
+      "enabled": true
+
+    },
+    {
+      "experiment_id": "exp_vision_heavy_heft",
+      "algorithm": "heft",
       "workload_dag": "dags/vision_pipeline.json",
       "enabled": true
+ 
+
     }
   ]
 }

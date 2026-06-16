@@ -1,0 +1,86 @@
+{
+  "test_suite_name": "Heterogeneous_DAG_Scheduler_Benchmark_Suite",
+  "cluster_size_nodes": 3,
+  "results": {
+    "exp_01_baseline_vision": {
+      "algorithm": "baseline",
+      "metrics": {
+        "makespan_seconds_avg": 6.9,
+        "scheduling_length_ratio_avg": 1.5333333333333334,
+        "parallel_speedup_avg": 0.6521739130434783,
+        "cluster_processor_utilization_avg": 0.21739130434782608,
+        "communication_to_computation_ratio_avg": 1.0
+      }
+    },
+    "exp_02_heft_vision": {
+      "algorithm": "heft",
+      "metrics": {
+        "makespan_seconds_avg": 4.5,
+        "scheduling_length_ratio_avg": 1.0,
+        "parallel_speedup_avg": 1.0,
+        "cluster_processor_utilization_avg": 0.3333333333333333,
+        "communication_to_computation_ratio_avg": 1.0
+      }
+    },
+    "exp_03_peft_vision": {
+      "algorithm": "peft",
+      "metrics": {
+        "makespan_seconds_avg": 4.5,
+        "scheduling_length_ratio_avg": 1.0,
+        "parallel_speedup_avg": 1.0,
+        "cluster_processor_utilization_avg": 0.3333333333333333,
+        "communication_to_computation_ratio_avg": 1.0
+      }
+    },
+    "exp_04_cpop_vision": {
+      "algorithm": "cpop",
+      "metrics": {
+        "makespan_seconds_avg": 4.5,
+        "scheduling_length_ratio_avg": 1.0,
+        "parallel_speedup_avg": 1.0,
+        "cluster_processor_utilization_avg": 0.3333333333333333,
+        "communication_to_computation_ratio_avg": 1.0
+      }
+    },
+    "exp_05_minmax_vision": {
+      "algorithm": "min-max",
+      "metrics": {
+        "makespan_seconds_avg": 4.5,
+        "scheduling_length_ratio_avg": 1.0,
+        "parallel_speedup_avg": 1.0,
+        "cluster_processor_utilization_avg": 0.3333333333333333,
+        "communication_to_computation_ratio_avg": 1.0
+      }
+    },
+    "exp_energy_heft": {
+      "algorithm": "heft",
+      "metrics": {
+        "makespan_seconds_avg": 7.2,
+        "scheduling_length_ratio_avg": 0.9600000000000002,
+        "parallel_speedup_avg": 1.0416666666666667,
+        "cluster_processor_utilization_avg": 0.3472222222222222,
+        "communication_to_computation_ratio_avg": 1.0
+      }
+    },
+    "exp_diamond_heft": {
+      "algorithm": "heft",
+      "metrics": {
+        "makespan_seconds_avg": 5.7,
+        "scheduling_length_ratio_avg": 0.95,
+        "parallel_speedup_avg": 1.0526315789473684,
+        "cluster_processor_utilization_avg": 0.3508771929824561,
+        "communication_to_computation_ratio_avg": 1.0
+      }
+    },
+    "exp_vision_heavy_heft": {
+      "algorithm": "heft",
+      "metrics": {
+        "makespan_seconds_avg": 4.5,
+        "scheduling_length_ratio_avg": 1.0,
+        "parallel_speedup_avg": 1.0,
+        "cluster_processor_utilization_avg": 0.3333333333333333,
+        "communication_to_computation_ratio_avg": 1.0
+      }
+    }
+  }
+}

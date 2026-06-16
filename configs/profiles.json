@@ -1,27 +1,26 @@
 {
-  "devices": {
-    "jetson_nano_01": {
-      "type": "edge_gpu",
-      "cores": 128,
-      "task_execution_multipliers": {
-        "vision_task": 0.5,
-        "data_parsing": 1.2,
-        "model_inference": 0.3
-      }
+  "computation_profiles": {
+    "laptop": {
+      "Data_Preprocessing": 0.50, "Feature_Extraction": 1.20, "Model_Training": 2.50,
+      "data_parsing": 0.40, "model_inference": 2.10,
+      "vision_task": 1.00
     },
-    "raspberry_pi_01": {
-      "type": "edge_cpu",
-      "cores": 4,
-      "task_execution_multipliers": {
-        "vision_task": 2.0,
-        "data_parsing": 0.8,
-        "model_inference": 2.5
-      }
+    "jetson": {
+      "Data_Preprocessing": 1.50, "Feature_Extraction": 3.40, "Model_Training": 8.00,
+      "data_parsing": 1.10, "model_inference": 5.40,
+      "vision_task": 2.20
+    },
+    "raspberry_pi": {
+      "Data_Preprocessing": 2.80, "Feature_Extraction": 6.50, "Model_Training": 15.00,
+      "data_parsing": 2.20, "model_inference": 11.80,
+      "vision_task": 4.50
     }
   },
-  "network_matrix_mbps": {
-    "coordinator_to_jetson_nano_01": 100.0,
-    "coordinator_to_raspberry_pi_01": 100.0,
-    "jetson_nano_01_to_raspberry_pi_01": 50.0
+  "communication_profiles": {
+    "matrix": {
+      "laptop": { "laptop": 0.0, "jetson": 1.5, "raspberry_pi": 2.1 },
+      "jetson": { "laptop": 1.5, "jetson": 0.0, "raspberry_pi": 1.8 },
+      "raspberry_pi": { "laptop": 2.1, "jetson": 1.8, "raspberry_pi": 0.0 }
+    }
   }
 }

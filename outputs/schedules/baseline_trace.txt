@@ -1,0 +1,10 @@
+=== PHYSICAL SCHEDULE TRACE FOR LOG: EXP_01_BASELINE_VISION ===
+Algorithm Strategy: BASELINE
+Calculated Pipeline Makespan: 6.9000s
+Workload Profile CCR Value : 1.0000
+------------------------------------------------------------
+Task Index   | Assigned Node   | EST (s)    | EFT (s)   
+------------------------------------------------------------
+Task 0       | laptop          | 0.0000     | 1.5000    
+Task 1       | jetson          | 2.7000     | 4.2000    
+Task 2       | raspberry_pi    | 5.4000     | 6.9000    

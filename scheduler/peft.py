@@ -1,17 +1,21 @@
 # scheduler/peft.py
 import networkx as nx
 import numpy as np
-import os
-from scheduler.heft import load_cluster_infrastructure, calculate_est_eft, calculate_runtime_stats
 from scheduler.cost_model import CostModel
+from scheduler.heft import calculate_est_eft
 
 def calculate_oct_matrix(dag, comp_matrix, workers):
-    """Computes the Optimistic Predictor Cost Table (OCT) using asymmetric network profiles."""
+    """
+    Computes the Optimistic Predictor Cost Table (OCT) matrix.
+    OCT is a task-by-processor matrix that looks ahead to predict the minimum 
+    remaining processing costs down the path of the DAG.
+    """
     cost_engine = CostModel()
     num_tasks = comp_matrix.shape[0]
     num_processors = comp_matrix.shape[1]
     oct_table = np.zeros((num_tasks, num_processors))
     
+    # Traverse backward from exit nodes to entry nodes using reversed topological sort
     sorted_nodes = list(reversed(list(nx.topological_sort(dag))))
     
     for node in sorted_nodes:
@@ -20,7 +24,7 @@ def calculate_oct_matrix(dag, comp_matrix, workers):
             oct_table[node, :] = 0.0
         else:
             for p_w in range(num_processors):
-                source_worker_id = workers[p_w]["id"]
+                source_worker_name = workers[p_w]["name"]
                 succ_costs = []
                 
                 for succ in successors:
@@ -28,10 +32,12 @@ def calculate_oct_matrix(dag, comp_matrix, workers):
                     edge_weight_mb = dag[node][succ]['weight']
                     
                     for p_m in range(num_processors):
-                        target_worker_id = workers[p_m]["id"]
+                        target_worker_name = workers[p_m]["name"]
                         
-                        # Fetch true asymmetric network cost from profiles
-                        c_delay = cost_engine.get_communication_cost(source_worker_id, target_worker_id, edge_weight_mb)
+                        # Calculate communication overhead between processors using node names
+                        c_delay = cost_engine.get_communication_cost(
+                            source_worker_name, target_worker_name, edge_weight_mb
+                        )
                         val = oct_table[succ, p_m] + comp_matrix[succ, p_m] + c_delay
                         
                         if val < min_val:
@@ -41,39 +47,47 @@ def calculate_oct_matrix(dag, comp_matrix, workers):
                 oct_table[node, p_w] = max(succ_costs) if succ_costs else 0.0
     return oct_table
 
-def allocate_tasks_peft(dag, comp_matrix, oct_table, workers):
-    """Allocates tasks using the PEFT algorithm matching updated infrastructure models."""
+def allocate_tasks_peft(dag, comp_matrix, workers):
+    """
+    Main entry point for Predict Earliest Finish Time (PEFT) scheduling algorithm.
+    Returns:
+       makespan (float): The total execution length boundary.
+       schedule_results (dict): Mapping of task_idx -> (processor_idx, est, eft)
+    """
     num_processors = comp_matrix.shape[1]
     processor_free_time = np.zeros(num_processors)
     schedule_results = {}
     
-    # Calculate rank_oct to prioritize tasks
+    # 1. Compute the OCT table look-ahead window
+    oct_table = calculate_oct_matrix(dag, comp_matrix, workers)
+    
+    # 2. Compute rank_oct priority values: rank_oct(i) = structural average computation + average OCT row costs
     avg_w = np.mean(comp_matrix, axis=1)
     rank_oct = {i: avg_w[i] + np.mean(oct_table[i, :]) for i in dag.nodes()}
     
     unscheduled = set(dag.nodes())
     
     while unscheduled:
-        # Step A: Find tasks whose parent dependencies have already been allocated
+        # Step A: Filter out tasks whose dependency parents have already been pinned
         ready_tasks = [t for t in unscheduled if all(parent in schedule_results for parent in dag.predecessors(t))]
         
-        # Fallback safeguard in case of disconnected graph structural issues
         if not ready_tasks:
             ready_tasks = list(unscheduled)
             
-        # Step B: Select the task from the ready queue with the HIGHEST rank_oct value
+        # Step B: Pick the task from the ready queue boasting the HIGHEST rank_oct value
         task = max(ready_tasks, key=lambda x: rank_oct[x])
         
         best_processor = -1
         best_val = float('inf')
         best_est = float('inf')
         
-        # Step C: Evaluate processor options using the OCT value prediction modifier
+        # Step C: Evaluate target nodes using the look-ahead prediction modifier
         for proc in range(num_processors):
-            # Interfacing seamlessly with updated heft.py helper definitions
             est = calculate_est_eft(dag, task, proc, processor_free_time, schedule_results, workers)
             eft = est + comp_matrix[task][proc]
-            evaluation_value = eft + oct_table[task][proc] # Core PEFT heuristic constraint
+            
+            # The heart of PEFT: Choose processor based on Earliest Finish Time + predicted downstream impact
+            evaluation_value = eft + oct_table[task][proc]
             
             if evaluation_value < best_val:
                 best_val = evaluation_value
@@ -82,23 +96,10 @@ def allocate_tasks_peft(dag, comp_matrix, oct_table, workers):
                 
         actual_eft = best_est + comp_matrix[task][best_processor]
         
-        # Step D: Commit scheduling bounds securely
+        # Step D: Commit allocation slot
         schedule_results[task] = (best_processor, best_est, actual_eft)
         processor_free_time[best_processor] = actual_eft
         unscheduled.remove(task)
         
-    return calculate_runtime_stats(schedule_results), schedule_results
-
-if __name__ == "__main__":
-    print("====== PEFT SCHEDULER ENGINE LOCAL TESTING ======")
-    configs_ready = os.path.exists("configs/workers.json") and os.path.exists("dags/vision_pipeline.json")
-    
-    if not configs_ready:
-        print("[Notice] Workspace configuration profiles missing. Skipping execution test trace.")
-    else:
-        graph, cost_matrix, worker_list, names_map, idx_to_id = load_cluster_infrastructure()
-        oct_matrix = calculate_oct_matrix(graph, cost_matrix, worker_list)
-        peft_makespan, peft_schedule = allocate_tasks_peft(graph, cost_matrix, oct_matrix, worker_list)
-        
-        print(f"\n✔ PEFT Optimization Matrix complete for {len(peft_schedule)} nodes.")
-        print(f"-> PEFT Optimized Makespan: {peft_makespan:.2f}s")
+    makespan = max([times[2] for times in schedule_results.values()]) if schedule_results else 0.0
+    return makespan, schedule_results
