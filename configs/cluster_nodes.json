@@ -2,7 +2,7 @@
   {
     "id": 0,
     "name": "laptop",
-    "ip": "127.0.0.1",
+    "ip": "192.168.10.1",
     "port": 50051,
     "protocol": "grpc",
     "role": "gpu",
@@ -13,7 +13,7 @@
   {
     "id": 1,
     "name": "jetson",
-    "ip": "172.16.12.35",
+    "ip": "192.168.10.3",
     "port": 5000,
     "protocol": "http",
     "role": "gpu",
@@ -24,7 +24,7 @@
   {
     "id": 2,
     "name": "raspberry_pi",
-    "ip": "10.50.119.243",
+    "ip": "192.168.10.2",
     "port": 5001,
     "protocol": "http",
     "role": "cpu",
