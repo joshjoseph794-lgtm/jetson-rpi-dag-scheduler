@@ -1,7 +1,7 @@
 # remote_worker.py
 
 # ==================================================================================
-# ⚠️ LEGACY BACKUP SYSTEM INTERFACE — DO NOT USE FOR CORE BENCHMARKS
+#  LEGACY BACKUP SYSTEM INTERFACE — DO NOT USE FOR CORE BENCHMARKS
 # ==================================================================================
 # Purpose: This script serves strictly as an alternative, lightweight HTTP-driven 
 #          worker daemon wrapper. 
@@ -47,29 +47,29 @@ class TaskHandler(BaseHTTPRequestHandler):
         except (ValueError, TypeError):
             scheduled_start_time = 0.0
         
-        print(f"\n📥 [WORKER] HTTP POST Received - Task {task_id} ({task_type})")
-        print(f"📂 [WORKER] Script Target: {script_path} | Window: {allocated_duration}s")
+        print(f"\n [WORKER] HTTP POST Received - Task {task_id} ({task_type})")
+        print(f" [WORKER] Script Target: {script_path} | Window: {allocated_duration}s")
         
         # --- THE TIME-TRIGGERED CLOCK GATE ---
         if scheduled_start_time > 0.0:
             current_time = time.time()
             if scheduled_start_time > current_time:
                 wait_time = scheduled_start_time - current_time
-                print(f"⏳ [CLOCK GATE] Holding task {task_id}. Sleeping for {wait_time:.4f}s until target epoch...")
+                print(f" [CLOCK GATE] Holding task {task_id}. Sleeping for {wait_time:.4f}s until target epoch...")
                 
                 # High-precision millisecond loop to guarantee synchronized start time
                 while time.time() < scheduled_start_time:
                     time.sleep(0.001)
-                print(f"🚀 [CLOCK GATE] Target time reached! Releasing task {task_id} for execution.")
+                print(f" [CLOCK GATE] Target time reached! Releasing task {task_id} for execution.")
             else:
-                print(f"⚠️ [CLOCK GATE] Task arrived late by {current_time - scheduled_start_time:.4f}s. Executing immediately.")
+                print(f" [CLOCK GATE] Task arrived late by {current_time - scheduled_start_time:.4f}s. Executing immediately.")
         
         execution_time = 2.00
         status_flag = "SUCCESS"
         error_msg = ""
         
         try:
-            print(f"⏳ [WORKER] Spawning standalone execution sub-process...")
+            print(f" [WORKER] Spawning standalone execution sub-process...")
             start_time = time.time()
             
             # Execute the workload script natively on the node
@@ -85,14 +85,14 @@ class TaskHandler(BaseHTTPRequestHandler):
             if result.returncode != 0:
                 status_flag = "FAILED"
                 error_msg = result.stderr
-                print(f"❌ [WORKER] Script failed: {error_msg}")
+                print(f" [WORKER] Script failed: {error_msg}")
             else:
-                print(f"✅ [WORKER] Script completed successfully in {execution_time:.4f}s.")
+                print(f" [WORKER] Script completed successfully in {execution_time:.4f}s.")
                 
         except Exception as e:
             status_flag = "FAILED"
             error_msg = str(e)
-            print(f"⚠️ [WORKER] Runtime exception: {error_msg}")
+            print(f" [WORKER] Runtime exception: {error_msg}")
 
         response_data = {
             "task_id": str(task_id),
@@ -109,11 +109,11 @@ class TaskHandler(BaseHTTPRequestHandler):
 def run(port=5000):
     server_address = ('', port)
     httpd = HTTPServer(server_address, TaskHandler)
-    print(f"🖥️ [HTTP DAEMON] Production-Isolated Worker active on port {port}...")
+    print(f" [HTTP DAEMON] Production-Isolated Worker active on port {port}...")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("\n🛑 Shutting down HTTP daemon.")
+        print("\n Shutting down HTTP daemon.")
         httpd.server_close()
 
 if __name__ == '__main__':
@@ -122,6 +122,6 @@ if __name__ == '__main__':
         try:
             target_port = int(sys.argv[1])
         except ValueError:
-            print("⚠️ Invalid port argument, falling back to default port 5000.")
+            print(" Invalid port argument, falling back to default port 5000.")
             
     run(port=target_port)

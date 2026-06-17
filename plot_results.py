@@ -10,7 +10,7 @@ def main():
         results_path = "benchmark_results.json"
         
     if not os.path.exists(results_path):
-        print(f"❌ Cannot find benchmark results at target paths. Please run your benchmarks script first!")
+        print(f" Cannot find benchmark results at target paths. Please run your benchmarks script first!")
         return
 
     # 1. Read the compiled benchmark telemetry
@@ -65,7 +65,7 @@ def main():
         slrs.append(float(s_val))
 
     if not algos:
-        print("⚠️ No valid metrics fields could be parsed out from the tracking file.")
+        print(" No valid metrics fields could be parsed out from the tracking file.")
         return
 
     # Define a clean, professional academic color palette
@@ -129,8 +129,8 @@ def main():
     plt.close()
     
     print("======================================================================")
-    print(f"📊 Visualization successfully updated for {len(algos)} algorithms!")
-    print(f"📂 Saved Chart Asset: {plot_output}")
+    print(f" Visualization successfully updated for {len(algos)} algorithms!")
+    print(f" Saved Chart Asset: {plot_output}")
     print("======================================================================\n")
 
 if __name__ == "__main__":

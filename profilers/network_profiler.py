@@ -18,7 +18,7 @@ def measure_bandwidth(target_ip, port=5001, payload_size_mb=5):
     """
     bytes_to_send = b'X' * (payload_size_mb * 1024 * 1024)
     
-    print(f"📡 [NET_PROFILER] Initializing {payload_size_mb}MB link test to {target_ip}:{port}...")
+    print(f" [NET_PROFILER] Initializing {payload_size_mb}MB link test to {target_ip}:{port}...")
     
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(7.0) # Prevent the script from hanging forever if a node drops
@@ -40,12 +40,12 @@ def measure_bandwidth(target_ip, port=5001, payload_size_mb=5):
         elapsed_time = end_time - start_time
         throughput_mb_s = payload_size_mb / elapsed_time
         
-        print(f"📊 [NET_PROFILER] Transfer complete in {elapsed_time:.4f}s | Speed: {throughput_mb_s:.2f} MB/s")
+        print(f" [NET_PROFILER] Transfer complete in {elapsed_time:.4f}s | Speed: {throughput_mb_s:.2f} MB/s")
         return float(throughput_mb_s)
         
     except Exception as e:
-        print(f"⚠️ [NET_PROFILER] Bandwidth test failed to {target_ip}: {e}", file=sys.stderr)
-        print("🔄 [NET_PROFILER] Falling back to standard handbook baseline: 117.0 MB/s")
+        print(f" [NET_PROFILER] Bandwidth test failed to {target_ip}: {e}", file=sys.stderr)
+        print(" [NET_PROFILER] Falling back to standard handbook baseline: 117.0 MB/s")
         return 117.0
     finally:
         sock.close()
@@ -61,7 +61,7 @@ def start_network_test_receiver(port=5001):
     try:
         server_socket.bind(('0.0.0.0', port))
         server_socket.listen(1)
-        print(f"📥 [NET_RECEIVER] Network testing server active on port {port}...")
+        print(f" [NET_RECEIVER] Network testing server active on port {port}...")
         
         while True:
             client_socket, addr = server_socket.accept()
@@ -73,11 +73,11 @@ def start_network_test_receiver(port=5001):
                 # Send confirmation byte back before tearing down the link
                 client_socket.sendall(b'A')
             except Exception as e:
-                print(f"❌ Error handling network test stream: {e}")
+                print(f" Error handling network test stream: {e}")
             finally:
                 client_socket.close()
     except KeyboardInterrupt:
-        print("\n🛑 Shutting down network testing server.")
+        print("\n Shutting down network testing server.")
     finally:
         server_socket.close()
 

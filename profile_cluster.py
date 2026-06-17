@@ -27,7 +27,7 @@ NUM_NETWORK_RUNS = 3
 worst_case_compute = {}
 worst_case_network = {}
 
-print("🚀 STARTING AUTOMATED HETEROGENEOUS CLUSTER PROFILER...")
+print(" STARTING AUTOMATED HETEROGENEOUS CLUSTER PROFILER...")
 print("=========================================================")
 
 dispatcher = GRPCDispatcher(timeout=10)
@@ -37,10 +37,10 @@ dispatcher = GRPCDispatcher(timeout=10)
 # ==========================================
 for node_name, node_info in NODES.items():
     worst_case_compute[node_name] = {}
-    print(f"\n🖥️ Profiling Computation on Node: {node_name} ({node_info['ip']}:{node_info['port']})")
+    print(f"\n Profiling Computation on Node: {node_name} ({node_info['ip']}:{node_info['port']})")
     
     for task in TASKS:
-        print(f"  ⏳ Dispatching '{task}' over gRPC {NUM_COMPUTE_RUNS}x to capture hardware profile...")
+        print(f"   Dispatching '{task}' over gRPC {NUM_COMPUTE_RUNS}x to capture hardware profile...")
         runtimes = []
         fallback_triggered = False
         
@@ -74,16 +74,16 @@ for node_name, node_info in NODES.items():
                     runtimes.append(1.45 + (run * 0.04))
                     
         if fallback_triggered:
-            print(f"  ⚠️ [WARNING] Node '{node_name}' connection failed or timed out. Using synthetic baseline values.")
+            print(f"   [WARNING] Node '{node_name}' connection failed or timed out. Using synthetic baseline values.")
             
         max_runtime = max(runtimes)
         worst_case_compute[node_name][task] = round(max_runtime, 4)
-        print(f"  ✅ Done. Worst-case execution time for {task}: {worst_case_compute[node_name][task]}s")
+        print(f"   Done. Worst-case execution time for {task}: {worst_case_compute[node_name][task]}s")
 
 # ==========================================
 # 2. COMMUNICATION PROFILING LOOP (iperf3)
 # ==========================================
-print("\n\n📡 STARTING NETWORK BANDWIDTH PROFILER (iperf3)...")
+print("\n\n STARTING NETWORK BANDWIDTH PROFILER (iperf3)...")
 print("=========================================================")
 
 for node_name, node_info in NODES.items():
@@ -91,7 +91,7 @@ for node_name, node_info in NODES.items():
         worst_case_network[node_name] = {"latency_ms": 0.1, "bandwidth_mbps": 10000.0}
         continue
         
-    print(f"📡 Testing network channel stability to {node_name} ({node_info['ip']})...")
+    print(f" Testing network channel stability to {node_name} ({node_info['ip']})...")
     bandwidths = []
     
     for run in range(NUM_NETWORK_RUNS):
@@ -117,7 +117,7 @@ for node_name, node_info in NODES.items():
         "latency_ms": 1.5,
         "bandwidth_mbps": round(min_bandwidth, 2)
     }
-    print(f"  ✅ Done. Guaranteed minimum bandwidth: {worst_case_network[node_name]['bandwidth_mbps']} Mbps")
+    print(f"   Done. Guaranteed minimum bandwidth: {worst_case_network[node_name]['bandwidth_mbps']} Mbps")
 
 # --- BULLETPROOF ABSOLUTE PATH HANDLING ---
 configs_dir = os.path.join(BASE_DIR, "configs")
@@ -132,6 +132,6 @@ with open(output_compute_path, "w") as f:
 with open(output_network_path, "w") as f:
     json.dump(worst_case_network, f, indent=4)
 
-print(f"\n\n🎉 [SUCCESS] Profiling phase complete. Matrices written to disk!")
+print(f"\n\n [SUCCESS] Profiling phase complete. Matrices written to disk!")
 print(f"  -> {output_compute_path}")
 print(f"  -> {output_network_path}")

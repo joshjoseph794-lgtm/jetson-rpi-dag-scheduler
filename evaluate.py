@@ -74,11 +74,11 @@ if __name__ == "__main__":
                     target_dag_file = matrix_data[0].get("workload_dag", target_dag_file)
                 elif isinstance(matrix_data, dict):
                     target_dag_file = matrix_data.get("workload_dag", target_dag_file)
-            print(f"🎯 [MATRIX] Benchmark targeting file layout: {target_dag_file}")
+            print(f" [MATRIX] Benchmark targeting file layout: {target_dag_file}")
         except Exception as e:
-            print(f"⚠️ [MATRIX] Reading error. Reverting to default: {e}")
+            print(f" [MATRIX] Reading error. Reverting to default: {e}")
     else:
-        print(f"⚠️ [MATRIX] Configuration missing at {matrix_path}. Using default.")
+        print(f" [MATRIX] Configuration missing at {matrix_path}. Using default.")
 
     # Target the unified workers setup manifest 
     workers_config = "configs/workers.json" if os.path.exists("configs/workers.json") else "config/workers.json"

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 def main():
     results_path = "outputs/benchmark_results.json"
     if not os.path.exists(results_path):
-        print(f"❌ Cannot find benchmark results at '{results_path}'. Please run 'python3 run_benchmarks.py' first!")
+        print(f" Cannot find benchmark results at '{results_path}'. Please run 'python3 run_benchmarks.py' first!")
         return
 
     # 1. Read the compiled benchmark telemetry
@@ -15,7 +15,7 @@ def main():
 
     experiments = data.get("results", {})
     if not experiments:
-        print("⚠️ No experiment data found inside the results JSON file.")
+        print(" No experiment data found inside the results JSON file.")
         return
     
     algos = []
@@ -92,8 +92,8 @@ def main():
     plt.close()
     
     print("======================================================================")
-    print(f"📊 Visualization successfully updated for {len(algos)} algorithms!")
-    print(f"📂 Saved Chart Asset: {plot_output}")
+    print(f" Visualization successfully updated for {len(algos)} algorithms!")
+    print(f" Saved Chart Asset: {plot_output}")
     print("======================================================================\n")
 
 if __name__ == "__main__":

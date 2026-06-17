@@ -30,17 +30,17 @@ def main():
     task_name_upper = args.task.upper()
     
     if "CAPTURE" in task_name_upper:
-        print("📸 [SUCCESS] Video frame matrix latched into buffer memory.")
+        print(" [SUCCESS] Video frame matrix latched into buffer memory.")
     elif "RESIZE" in task_name_upper or "PREPROCESS" in task_name_upper:
-        print("📐 [SUCCESS] High-definition matrix scaled down to 416x416 resolution.")
+        print(" [SUCCESS] High-definition matrix scaled down to 416x416 resolution.")
     elif "DNN" in task_name_upper or "DETECT" in task_name_upper:
-        print("🧠 [SUCCESS] TensorRT engine inference pass complete. Detected objects mapped cleanly.")
+        print(" [SUCCESS] TensorRT engine inference pass complete. Detected objects mapped cleanly.")
     elif "OVERLAY" in task_name_upper or "TRACK" in task_name_upper:
-        print("🎨 [SUCCESS] Rendered bounding box coordinates onto display canvas.")
+        print(" [SUCCESS] Rendered bounding box coordinates onto display canvas.")
     elif "LOGGING" in task_name_upper:
-        print("💾 [SUCCESS] Metric logs committed to relational database cluster.")
+        print(" [SUCCESS] Metric logs committed to relational database cluster.")
     else:
-        print("✅ [SUCCESS] Execution block completed cleanly.")
+        print(" [SUCCESS] Execution block completed cleanly.")
         
     print(f"[WORKLOAD-END] Task '{args.task}' finished processing in {elapsed:.4f} seconds.")
 

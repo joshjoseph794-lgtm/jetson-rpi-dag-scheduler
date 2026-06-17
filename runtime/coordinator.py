@@ -18,9 +18,9 @@ try:
         COMPUTE_PROFILES = json.load(f)
     with open("worst_case_network.json", "r") as f:
         NETWORK_PROFILES = json.load(f)
-    print("📊 [COORDINATOR] Successfully ingested worst-case cluster profiles from disk.")
+    print(" [COORDINATOR] Successfully ingested worst-case cluster profiles from disk.")
 except FileNotFoundError as e:
-    print(f"❌ [COORDINATOR] Critical Error: Profiler files missing. Run profile_cluster.py first. Details: {e}")
+    print(f" [COORDINATOR] Critical Error: Profiler files missing. Run profile_cluster.py first. Details: {e}")
     exit(1)
 
 # Node networking mapping details - pointing to the unified path
@@ -135,7 +135,7 @@ def calculate_heft_schedule(tasks):
     node_available_time = {node: 0.0 for node in NODE_CHANNELS}
     task_finish_times = {}
 
-    print("\n🗓️ [HEFT ENGINE] Calculating optimal schedule matrix...")
+    print("\n [HEFT ENGINE] Calculating optimal schedule matrix...")
     
     for task in scheduled_tasks:
         best_node = None
@@ -177,7 +177,7 @@ def calculate_heft_schedule(tasks):
         node_available_time[best_node] = earliest_finish_time
         task_finish_times[task.id] = earliest_finish_time
         
-        print(f"  📌 Task {task.id} -> {best_node} | Start Offset: {task.heft_start_offset:.2f}s | Finish Offset: {task.heft_finish_offset:.2f}s")
+        print(f"   Task {task.id} -> {best_node} | Start Offset: {task.heft_start_offset:.2f}s | Finish Offset: {task.heft_finish_offset:.2f}s")
         
     return scheduled_tasks
 
@@ -188,7 +188,7 @@ def dispatch_task(task, dag_start_epoch):
     target_trigger_epoch = dag_start_epoch + task.heft_start_offset
     node_config = NODE_CHANNELS[task.assigned_node]
     
-    print(f"🚀 [DISPATCHER] Deploying {task.id} to {task.assigned_node}. Target Start Epoch: {target_trigger_epoch:.4f}")
+    print(f" [DISPATCHER] Deploying {task.id} to {task.assigned_node}. Target Start Epoch: {target_trigger_epoch:.4f}")
     
     if node_config["protocol"] == "grpc":
         try:
@@ -202,9 +202,9 @@ def dispatch_task(task, dag_start_epoch):
                     scheduled_start_time=str(target_trigger_epoch)
                 )
                 response = stub.ExecuteTask(request, timeout=60)
-                print(f"✅ [DISPATCHER] gRPC Node Response for {task.id}: {response.status}")
+                print(f" [DISPATCHER] gRPC Node Response for {task.id}: {response.status}")
         except Exception as e:
-            print(f"❌ [DISPATCHER] gRPC Link Critical Failure on {task.id}: {e}")
+            print(f" [DISPATCHER] gRPC Link Critical Failure on {task.id}: {e}")
             
     elif node_config["protocol"] == "http":
         import requests
@@ -219,18 +219,18 @@ def dispatch_task(task, dag_start_epoch):
             url = f"http://{node_config['target']}/"
             res = requests.post(url, json=payload, timeout=60)
             if res.status_code == 200:
-                print(f"✅ [DISPATCHER] HTTP Node Response for {task.id}: {res.json().get('status')}")
+                print(f" [DISPATCHER] HTTP Node Response for {task.id}: {res.json().get('status')}")
             else:
-                print(f"❌ [DISPATCHER] HTTP Error Code received from Node on {task.id}: {res.status_code}")
+                print(f" [DISPATCHER] HTTP Error Code received from Node on {task.id}: {res.status_code}")
         except Exception as e:
-            print(f"❌ [DISPATCHER] gRPC Link Critical Failure on {task.id}: {e}")
+            print(f" [DISPATCHER] gRPC Link Critical Failure on {task.id}: {e}")
 
 # ==========================================
 # 5. DYNAMIC MAIN EXECUTION PIPELINE
 # ==========================================
 if __name__ == "__main__":
     print("=========================================================")
-    print("🏁 INITIALIZING STATIC TIME-TRIGGERED HEFT COORDINATOR")
+    print(" INITIALIZING STATIC TIME-TRIGGERED HEFT COORDINATOR")
     print("=========================================================")
     
     # Dynamically locate the target DAG active in the experiment matrix config
@@ -244,18 +244,18 @@ if __name__ == "__main__":
                 target_dag_file = matrix_data[0].get("workload_dag", target_dag_file)
             elif isinstance(matrix_data, dict):
                 target_dag_file = matrix_data.get("workload_dag", target_dag_file)
-        print(f"🎯 [MATRIX] Targeting Active Execution File: {target_dag_file}")
+        print(f" [MATRIX] Targeting Active Execution File: {target_dag_file}")
     except Exception:
-        print(f"⚠️ [MATRIX] Could not load matrix setup. Defaulting to: {target_dag_file}")
+        print(f" [MATRIX] Could not load matrix setup. Defaulting to: {target_dag_file}")
 
     try:
         with open("task_registry.json", "r") as f:
             registry = json.load(f)
         with open(target_dag_file, "r") as f:
             pipeline_raw = json.load(f)
-        print("📁 [CONFIG] Successfully parsed task registry and active pipeline files.")
+        print(" [CONFIG] Successfully parsed task registry and active pipeline files.")
     except Exception as e:
-        print(f"❌ [CONFIG] Critical Error loading configuration JSON files: {e}")
+        print(f" [CONFIG] Critical Error loading configuration JSON files: {e}")
         exit(1)
 
     # Normalize our target structural dataset
@@ -271,7 +271,7 @@ if __name__ == "__main__":
         data_size = block["data_size_mb"]
         
         if t_type not in registry:
-            print(f"❌ [CONFIG] Error: Task type '{t_type}' requested by {t_id} is missing from task_registry.json!")
+            print(f" [CONFIG] Error: Task type '{t_type}' requested by {t_id} is missing from task_registry.json!")
             exit(1)
             
         script_path = registry[t_type]["script_path"]
@@ -290,17 +290,17 @@ if __name__ == "__main__":
             if dep_str in task_lookup:
                 task_lookup[t_id].dependencies.append(task_lookup[dep_str])
             else:
-                print(f"❌ [CONFIG] Dependency Error: Task {t_id} references an unknown parent '{dep_id}'")
+                print(f" [CONFIG] Dependency Error: Task {t_id} references an unknown parent '{dep_id}'")
                 exit(1)
                 
     optimized_schedule = calculate_heft_schedule(dag_topology)
     
-    print("\n🔒 [SYNCHRONIZATION LOCK] Establishing Global System Base-Clock...")
+    print("\n [SYNCHRONIZATION LOCK] Establishing Global System Base-Clock...")
     global_dag_start_epoch = time.time() + 3.0
-    print(f"⏰ Master Time-Zero Epoch designated as: {global_dag_start_epoch:.4f}")
+    print(f" Master Time-Zero Epoch designated as: {global_dag_start_epoch:.4f}")
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         for task in optimized_schedule:
             executor.submit(dispatch_task, task, global_dag_start_epoch)
             
-    print("\n🎉 [SUCCESS] All dynamically configured tasks dispatched cleanly.")
+    print("\n [SUCCESS] All dynamically configured tasks dispatched cleanly.")

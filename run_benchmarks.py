@@ -5,7 +5,7 @@ import numpy as np
 import networkx as nx
 
 # ======================================================================
-# 📦 UNIFIED SCHEDULING HEURISTICS IMPORTS
+#  UNIFIED SCHEDULING HEURISTICS IMPORTS
 # ======================================================================
 from scheduler.heft import allocate_tasks_heft
 from scheduler.peft import allocate_tasks_peft
@@ -19,7 +19,7 @@ from scheduler.baseline import (
 from scheduler.cost_model import CostModel
 
 # ======================================================================
-# 🗃️ ALGORITHM REGISTRY MAPPING
+#  ALGORITHM REGISTRY MAPPING
 # ======================================================================
 # Maps the string keys from your experiment_matrix.json directly 
 # to the unique Python execution points inside your scheduler/ folder.
@@ -136,7 +136,7 @@ def calculate_processor_utilization(schedule, W, num_workers, makespan):
 
 def main():
     print("======================================================================")
-    print("🚀 EDGE CLUSTER METRICS INTEGRATION & BENCHMARK HARNESS STARTED")
+    print(" EDGE CLUSTER METRICS INTEGRATION & BENCHMARK HARNESS STARTED")
     print("======================================================================\n")
 
     # Standardize network parameters to your handbook's verified Gigabit Ethernet specs
@@ -159,7 +159,7 @@ def main():
             raise TypeError("Format of cluster_nodes.json must be a JSON array or object.")
             
     except Exception as e:
-        print(f"❌ Initialization aborted: {e}")
+        print(f" Initialization aborted: {e}")
         return
 
     global_settings = matrix_cfg.get("global_settings", {})
@@ -184,14 +184,14 @@ def main():
         enabled = exp.get("enabled", True)
 
         if not enabled:
-            print(f"⏭️ Skipping experiment [{exp_id}] (Disabled in matrix layout)")
+            print(f"⏭ Skipping experiment [{exp_id}] (Disabled in matrix layout)")
             continue
 
         if algo_key not in ALGORITHM_REGISTRY:
-            print(f"⚠️ Skipping experiment [{exp_id}]: Algorithm '{algo_key}' is unregistered.")
+            print(f" Skipping experiment [{exp_id}]: Algorithm '{algo_key}' is unregistered.")
             continue
 
-        print(f"📊 Running Evaluation Suite: {exp_id.upper()} ({algo_key.upper()})")
+        print(f" Running Evaluation Suite: {exp_id.upper()} ({algo_key.upper()})")
         print(f"   Target DAG Workload: {dag_path} | Executing {iterations} tracking loops...")
 
         try:
@@ -200,7 +200,7 @@ def main():
             dag = build_networkx_dag(normalized_tasks)
             comp_matrix = generate_computation_matrix(normalized_tasks, workers, cost_model)
         except Exception as e:
-            print(f"   ❌ Failed to load DAG infrastructure for this experiment loop: {e}\n")
+            print(f"    Failed to load DAG infrastructure for this experiment loop: {e}\n")
             continue
 
         makespans, slrs, speedups, utilizations, ccrs = [], [], [], [], []
@@ -210,7 +210,7 @@ def main():
         for i in range(iterations):
             scheduler_func = ALGORITHM_REGISTRY[algo_key]
             
-            # 😎 UNIFIED UNIFORM CALL FOR ALL ALGORITHMS
+            #  UNIFIED UNIFORM CALL FOR ALL ALGORITHMS
             makespan, schedule_results = scheduler_func(dag, comp_matrix, avg_bandwidth, workers)
             # Calculate metrics
             slr = calculate_scheduling_length_ratio(makespan, dag, comp_matrix)
@@ -275,7 +275,7 @@ def main():
     with open(output_log_file, "w") as f:
         json.dump(benchmark_report, f, indent=2)
 
-    print(f"\n✅ All benchmarks successfully logged to: {output_log_file}")
+    print(f"\n All benchmarks successfully logged to: {output_log_file}")
     print("======================================================================\n")
 
 if __name__ == "__main__":

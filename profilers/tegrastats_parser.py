@@ -33,9 +33,9 @@ class TegrastatsParser:
                 stderr=subprocess.DEVNULL,
                 text=True
             )
-            print("📊 [TEGRASTATS] Telemetry recording safely bound to disk stream.")
+            print(" [TEGRASTATS] Telemetry recording safely bound to disk stream.")
         except FileNotFoundError:
-            print("⚠️ [TEGRASTATS] 'tegrastats' utility not found. Using simulation fallback.")
+            print(" [TEGRASTATS] 'tegrastats' utility not found. Using simulation fallback.")
             self.process = None
 
     def stop(self):

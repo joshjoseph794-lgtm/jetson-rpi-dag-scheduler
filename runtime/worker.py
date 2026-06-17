@@ -37,7 +37,7 @@ class TaskDispatcherServicer(messages_pb2_grpc.TaskDispatcherServicer):
     """
     def __init__(self, hardware_type):
         self.hardware_type = hardware_type
-        print(f"🔧 [WORKER] Initialized profiling engine optimized for: {self.hardware_type}")
+        print(f" [WORKER] Initialized profiling engine optimized for: {self.hardware_type}")
 
     def ExecuteTask(self, request, context):
         task_id = request.task_id
@@ -52,22 +52,22 @@ class TaskDispatcherServicer(messages_pb2_grpc.TaskDispatcherServicer):
         except ValueError:
             scheduled_start_time = 0.0
         
-        print(f"\n📥 [WORKER] Received Task {task_id} via gRPC ({task_type})")
-        print(f"📂 [WORKER] Target Payload Script: {script_path} | Input Size: {data_size_mb} MB")
+        print(f"\n [WORKER] Received Task {task_id} via gRPC ({task_type})")
+        print(f" [WORKER] Target Payload Script: {script_path} | Input Size: {data_size_mb} MB")
         
         # --- THE TIME-TRIGGERED CLOCK GATE ---
         if scheduled_start_time > 0.0:
             current_time = time.time()
             if scheduled_start_time > current_time:
                 wait_time = scheduled_start_time - current_time
-                print(f"⏳ [CLOCK GATE] Holding task {task_id}. Sleeping for {wait_time:.4f}s until target epoch...")
+                print(f" [CLOCK GATE] Holding task {task_id}. Sleeping for {wait_time:.4f}s until target epoch...")
                 
                 # High-precision millisecond synchronization loop
                 while time.time() < scheduled_start_time:
                     time.sleep(0.001)
-                print(f"🚀 [CLOCK GATE] Target time reached! Releasing task {task_id} for execution.")
+                print(f" [CLOCK GATE] Target time reached! Releasing task {task_id} for execution.")
             else:
-                print(f"⚠️ [CLOCK GATE] Task arrived late by {current_time - scheduled_start_time:.4f}s. Executing immediately.")
+                print(f" [CLOCK GATE] Task arrived late by {current_time - scheduled_start_time:.4f}s. Executing immediately.")
 
         # 1. Dynamically initialize the correct hardware telemetry profiler
         is_jetson = "jetson" in self.hardware_type or "nvidia" in self.hardware_type
@@ -100,7 +100,7 @@ class TaskDispatcherServicer(messages_pb2_grpc.TaskDispatcherServicer):
                 sampler_thread.start()
             
             # 2. Trigger LIVE execution of our unified task harness script
-            print(f"⏳ [WORKER] Spinning up hardware telemetry recorders...")
+            print(f" [WORKER] Spinning up hardware telemetry recorders...")
             execution_results = profile_execution(
                 script_path,
                 "--task", task_type,
@@ -120,13 +120,13 @@ class TaskDispatcherServicer(messages_pb2_grpc.TaskDispatcherServicer):
             error_msg = execution_results.get("error_message", "")
             
             if status_flag == "SUCCESS":
-                print(f"✅ [WORKER] Task {task_id} processed cleanly.")
-                print(f"📊 [TELEMETRY] Avg Power Consumption: {hardware_telemetry.get('avg_power_watts', 0)}W")
+                print(f" [WORKER] Task {task_id} processed cleanly.")
+                print(f" [TELEMETRY] Avg Power Consumption: {hardware_telemetry.get('avg_power_watts', 0)}W")
             else:
-                print(f"❌ [WORKER] Task {task_id} processing crashed: {error_msg}")
+                print(f" [WORKER] Task {task_id} processing crashed: {error_msg}")
 
         except Exception as e:
-            print(f"⚠️ [WORKER BOUNDARY EXCEPTION] Execution layer encountered tracking anomalies: {str(e)}")
+            print(f" [WORKER BOUNDARY EXCEPTION] Execution layer encountered tracking anomalies: {str(e)}")
             status_flag = "FAILED"
             error_msg = str(e)
 
@@ -141,7 +141,7 @@ class TaskDispatcherServicer(messages_pb2_grpc.TaskDispatcherServicer):
 def serve(port=50051, hardware_override=None):
     if hardware_override:
         hardware_type = hardware_override
-        print(f"🎯 [DETECTION] Using explicit command-line override: {hardware_type}")
+        print(f" [DETECTION] Using explicit command-line override: {hardware_type}")
     else:
         # Robust hardware profile detection via environment and naming analysis
         hostname = socket.gethostname().lower()
@@ -149,13 +149,13 @@ def serve(port=50051, hardware_override=None):
         
         if "jetson" in hostname or "nvidia" in hostname or "/home/jetson" in current_dir:
             hardware_type = "nvidia_jetson_nano"
-            print("🎯 [DETECTION] Confirmed execution environment: Jetson Nano Physical Hardware.")
+            print(" [DETECTION] Confirmed execution environment: Jetson Nano Physical Hardware.")
         elif "raspberry" in hostname or "pi-" in hostname or os.path.exists("/sys/firmware/devicetree/base/model"):
             hardware_type = "raspberry_pi"
-            print("🎯 [DETECTION] Confirmed execution environment: Raspberry Pi Edge Node.")
+            print(" [DETECTION] Confirmed execution environment: Raspberry Pi Edge Node.")
         else:
             hardware_type = "laptop_generic"
-            print("💻 [DETECTION] Confirmed execution environment: Standard Host Computer/Laptop.")
+            print(" [DETECTION] Confirmed execution environment: Standard Host Computer/Laptop.")
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     
@@ -165,14 +165,14 @@ def serve(port=50051, hardware_override=None):
     
     server.add_insecure_port(f'[::]:{port}')
     server.start()
-    print(f"🖥️ [WORKER] Heterogeneous Edge Node Daemon active on port {port}...")
-    print("🚀 Waiting for synchronized task dispatches from cluster coordinator...")
+    print(f" [WORKER] Heterogeneous Edge Node Daemon active on port {port}...")
+    print(" Waiting for synchronized task dispatches from cluster coordinator...")
     
     try:
         while True:
             time.sleep(86400)
     except KeyboardInterrupt:
-        print("\n🛑 Shutting down edge daemon server.")
+        print("\n Shutting down edge daemon server.")
         server.stop(0)
 
 if __name__ == "__main__":

@@ -23,7 +23,7 @@ class CostModel:
             with open(self.compute_profile_path, 'r') as f:
                 self.compute_matrix = json.load(f)
         else:
-            print(f"⚠️ [COST MODEL] Warning: Compute profile missing at {self.compute_profile_path}. Using safe defaults.")
+            print(f" [COST MODEL] Warning: Compute profile missing at {self.compute_profile_path}. Using safe defaults.")
             self.compute_matrix = {}
 
         # 2. Load network link bandwidth profiles
@@ -31,7 +31,7 @@ class CostModel:
             with open(self.network_profile_path, 'r') as f:
                 self.network_matrix = json.load(f)
         else:
-            print(f"⚠️ [COST MODEL] Warning: Network profile missing at {self.network_profile_path}. Using safe defaults.")
+            print(f" [COST MODEL] Warning: Network profile missing at {self.network_profile_path}. Using safe defaults.")
             self.network_matrix = {}
 
     def get_computation_cost(self, node_name, task_type):
