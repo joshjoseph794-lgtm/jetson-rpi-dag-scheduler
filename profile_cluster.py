@@ -12,9 +12,9 @@ from runtime.dispatcher_grpc import GRPCDispatcher
 
 # --- PRODUCTION CLUSTER TOPOLOGY CONFIGURATION ---
 NODES = {
-    "laptop01": {"ip": "127.0.0.1", "port": 50051},
-    "jetson01": {"ip": "127.0.0.1", "port": 50051},
-    "raspi01":  {"ip": "127.0.0.1", "port": 50051}
+    "laptop01": {"ip": "192.168.10.1", "port": 50051},
+    "jetson01": {"ip": "192.168.10.2", "port": 50051},
+    "raspi01":  {"ip": "192.168.10.3", "port": 50051}
 }
 
 # Align task keys precisely with your task_registry.json manifest
