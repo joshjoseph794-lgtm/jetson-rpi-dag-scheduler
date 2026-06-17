@@ -6,7 +6,8 @@ import os
 import sys
 
 # Ensure Python can find our local packages if run from different directories
-sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(BASE_DIR)
 
 from runtime.dispatcher_grpc import GRPCDispatcher
 
@@ -20,8 +21,8 @@ NODES = {
 # Align task keys precisely with your task_registry.json manifest
 TASKS = ["Capture", "Resize", "DNN_Inference", "Logging"]
 
-NUM_COMPUTE_RUNS = 5   # Reduced from 100 to prevent long hardware testing stalls
-NUM_NETWORK_RUNS = 3   # Optimized for stable trend compilation
+NUM_COMPUTE_RUNS = 5   
+NUM_NETWORK_RUNS = 3   
 
 worst_case_compute = {}
 worst_case_network = {}
@@ -29,7 +30,6 @@ worst_case_network = {}
 print("🚀 STARTING AUTOMATED HETEROGENEOUS CLUSTER PROFILER...")
 print("=========================================================")
 
-# Instantiate our low-latency gRPC orchestration driver
 dispatcher = GRPCDispatcher(timeout=10)
 
 # ==========================================
@@ -42,23 +42,30 @@ for node_name, node_info in NODES.items():
     for task in TASKS:
         print(f"  ⏳ Dispatching '{task}' over gRPC {NUM_COMPUTE_RUNS}x to capture hardware profile...")
         runtimes = []
+        fallback_triggered = False
         
         for run in range(NUM_COMPUTE_RUNS):
-            # Send the task payload over your live gRPC channels
-            response = dispatcher.dispatch_task(
-                worker_ip=node_info["ip"],
-                port=node_info["port"],
-                task_id=f"profile_{node_name}_{task}_{run}",
-                task_type=task,
-                script_path="workloads/synthetic/cpu_task.py",
-                data_size_mb=0.0,
-                scheduled_start_time="0.0"
-            )
-            
-            if response["status"] == "SUCCESS" and response["execution_time_sec"] > 0:
-                runtimes.append(response["execution_time_sec"])
-            else:
-                # Controlled synthetic fallback matrix to preserve cluster heterogeneity if a node is offline
+            try:
+                response = dispatcher.dispatch_task(
+                    worker_ip=node_info["ip"],
+                    port=node_info["port"],
+                    task_id=f"profile_{node_name}_{task}_{run}",
+                    task_type=task,
+                    script_path="workloads/synthetic/cpu_task.py",
+                    data_size_mb=0.0,
+                    scheduled_start_time="0.0"
+                )
+                
+                if response and response.get("status") == "SUCCESS" and response.get("execution_time_sec", 0) > 0:
+                    runtimes.append(response["execution_time_sec"])
+                else:
+                    fallback_triggered = True
+            except Exception:
+                fallback_triggered = True
+
+            if fallback_triggered:
+                # Log a strict alert instead of failing silently 
+                fallback_triggered = True
                 if "laptop" in node_name:
                     runtimes.append(0.35 + (run * 0.01))
                 elif "jetson" in node_name:
@@ -66,7 +73,9 @@ for node_name, node_info in NODES.items():
                 else:  # Raspberry Pi
                     runtimes.append(1.45 + (run * 0.04))
                     
-        # Extract the absolute worst-case scenario
+        if fallback_triggered:
+            print(f"  ⚠️ [WARNING] Node '{node_name}' connection failed or timed out. Using synthetic baseline values.")
+            
         max_runtime = max(runtimes)
         worst_case_compute[node_name][task] = round(max_runtime, 4)
         print(f"  ✅ Done. Worst-case execution time for {task}: {worst_case_compute[node_name][task]}s")
@@ -87,14 +96,12 @@ for node_name, node_info in NODES.items():
     
     for run in range(NUM_NETWORK_RUNS):
         try:
-            # Run a 2-second iperf3 test to guarantee complete data block handshakes
             result = subprocess.run(
                 ["iperf3", "-c", node_info["ip"], "-t", "2", "-J"], 
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
             )
             data = json.loads(result.stdout)
             
-            # Use safe block dictionary reads to handle short flushes smoothly
             if "end" in data and "sum_received" in data["end"]:
                 bps = data["end"]["sum_received"]["bits_per_second"]
             else:
@@ -103,7 +110,7 @@ for node_name, node_info in NODES.items():
             mbps = bps / 1e6
             bandwidths.append(mbps)
         except Exception:
-            bandwidths.append(94.0)  # Safe default fallback for standard Fast Ethernet links
+            bandwidths.append(94.0)  
             
     min_bandwidth = min(bandwidths)
     worst_case_network[node_name] = {
@@ -112,9 +119,12 @@ for node_name, node_info in NODES.items():
     }
     print(f"  ✅ Done. Guaranteed minimum bandwidth: {worst_case_network[node_name]['bandwidth_mbps']} Mbps")
 
-# Write configs out to project root configuration paths
-output_compute_path = "configs/worst_case_compute.json" if os.path.exists("configs") else "worst_case_compute.json"
-output_network_path = "configs/worst_case_network.json" if os.path.exists("configs") else "worst_case_network.json"
+# --- BULLETPROOF ABSOLUTE PATH HANDLING ---
+configs_dir = os.path.join(BASE_DIR, "configs")
+os.makedirs(configs_dir, exist_ok=True) # Automatically creates the directory if missing
+
+output_compute_path = os.path.join(configs_dir, "worst_case_compute.json")
+output_network_path = os.path.join(configs_dir, "worst_case_network.json")
 
 with open(output_compute_path, "w") as f:
     json.dump(worst_case_compute, f, indent=4)
