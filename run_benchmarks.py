@@ -3,6 +3,11 @@ import json
 import os
 import numpy as np
 import networkx as nx
+import sys
+
+# Establish the absolute directory anchor point
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(BASE_DIR)
 
 # ======================================================================
 #  UNIFIED SCHEDULING HEURISTICS IMPORTS
@@ -21,26 +26,23 @@ from scheduler.cost_model import CostModel
 # ======================================================================
 #  ALGORITHM REGISTRY MAPPING
 # ======================================================================
-# Maps the string keys from your experiment_matrix.json directly 
-# to the unique Python execution points inside your scheduler/ folder.
 ALGORITHM_REGISTRY = {
-    # Classic Baselines (from scheduler/baseline.py)
-    "baseline": allocate_tasks_round_robin,      # Standard matrix control fallback
+    "baseline": allocate_tasks_round_robin,      
     "round_robin": allocate_tasks_round_robin,
     "min_min": allocate_tasks_min_min,
     "random": allocate_tasks_random,
-    
-    # Advanced Heterogeneous List Schedulers (Unique Files)
-    "heft": allocate_tasks_heft,                 # from scheduler/heft.py
-    "peft": allocate_tasks_peft,                 # from scheduler/peft.py
-    "cpop": allocate_tasks_cpop,                 # from scheduler/cpop.py
-    
-    # Advanced Batch/Greedy Heuristic (Unique File)
-    "min-max": allocate_tasks_min_max            # from scheduler/min_max.py
+    "heft": allocate_tasks_heft,                 
+    "peft": allocate_tasks_peft,                 
+    "cpop": allocate_tasks_cpop,                 
+    "min-max": allocate_tasks_min_max            
 }
 
 def load_json_asset(filepath):
-    """Safely loads a JSON file from disk."""
+    """Safely loads a JSON file from disk using absolute pathing."""
+    # Ensure we use absolute paths if a relative one is provided
+    if not os.path.isabs(filepath):
+        filepath = os.path.join(BASE_DIR, filepath)
+        
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"Required configuration asset missing at: {filepath}")
     with open(filepath, "r") as f:
@@ -79,7 +81,6 @@ def generate_computation_matrix(tasks, workers, cost_model):
     for idx, task in enumerate(tasks):
         task_type = task.get("task_type", "Capture")
         for j, worker in enumerate(workers):
-            # Extract names depending on dictionary layout style
             w_name = worker if isinstance(worker, str) else worker.get("name", f"worker_{j}")
             W[idx, j] = cost_model.get_computation_cost(w_name, task_type)
     return W
@@ -93,7 +94,6 @@ def normalize_dag_data(dag_data):
     nodes = dag_data.get("nodes", dag_data.get("tasks", []))
     edges = dag_data.get("edges", dag_data.get("dependencies", []))
     
-    # Handle implicit linear sequencing flat blocks
     if not nodes and isinstance(dag_data, dict):
         return [dag_data]
 
@@ -116,7 +116,6 @@ def normalize_dag_data(dag_data):
         
     return normalized_tasks
 
-# --- METRIC FALLBACK CALCULATORS TO ASSURE INDEPENDENT LOGGING ---
 def calculate_scheduling_length_ratio(makespan, dag, W):
     min_costs_sum = sum(np.min(W[node, :]) for node in dag.nodes())
     return makespan / min_costs_sum if min_costs_sum > 0 else 0.0
@@ -129,7 +128,6 @@ def calculate_processor_utilization(schedule, W, num_workers, makespan):
     if makespan == 0: return 0.0
     total_active_computation = 0.0
     for task_idx, data in schedule.items():
-        # Handle unpacking cleanly whether returned as (processor, est, eft) or a slice
         p_idx = data[0]
         total_active_computation += W[task_idx, p_idx]
     return total_active_computation / (num_workers * makespan)
@@ -139,18 +137,13 @@ def main():
     print(" EDGE CLUSTER METRICS INTEGRATION & BENCHMARK HARNESS STARTED")
     print("======================================================================\n")
 
-    # Standardize network parameters to your handbook's verified Gigabit Ethernet specs
-    avg_bandwidth = 117.0  # 117 MB/s (940 Mbps GbE)
+    avg_bandwidth = 117.0  
 
     # 1. Load Configurations and Infrastructure Lists
     try:
         matrix_cfg = load_json_asset("configs/experiment_matrix.json")
+        workers_raw = load_json_asset("configs/cluster_nodes.json")
         
-        # Use your explicit configuration filename
-        workers_path = "configs/cluster_nodes.json"
-        workers_raw = load_json_asset(workers_path)
-        
-        # DEFENSIVE PARSING: Safely extract the workers list regardless of JSON format
         if isinstance(workers_raw, list):
             workers = workers_raw
         elif isinstance(workers_raw, dict):
@@ -164,9 +157,13 @@ def main():
 
     global_settings = matrix_cfg.get("global_settings", {})
     iterations = global_settings.get("iterations_per_config", 1)
-    output_log_file = global_settings.get("metrics_log_file", "outputs/benchmark_results.json")
     
-    cost_model = CostModel()
+    # Resolve absolute log path
+    raw_log_file = global_settings.get("metrics_log_file", "outputs/benchmark_results.json")
+    output_log_file = raw_log_file if os.path.isabs(raw_log_file) else os.path.join(BASE_DIR, raw_log_file)
+    
+    # Passing the absolute BASE_DIR down to your CostModel to clean up file-not-found warnings
+    cost_model = CostModel(profile_dir=os.path.join(BASE_DIR, "configs"))
     
     benchmark_report = {
         "test_suite_name": matrix_cfg.get("test_suite_name", "Edge Performance Run"),
@@ -209,15 +206,12 @@ def main():
         # 3. Statistical Execution Loop
         for i in range(iterations):
             scheduler_func = ALGORITHM_REGISTRY[algo_key]
-            
-            #  UNIFIED UNIFORM CALL FOR ALL ALGORITHMS
             makespan, schedule_results = scheduler_func(dag, comp_matrix, avg_bandwidth, workers)
-            # Calculate metrics
+            
             slr = calculate_scheduling_length_ratio(makespan, dag, comp_matrix)
             speedup = calculate_speedup(makespan, comp_matrix)
             pu = calculate_processor_utilization(schedule_results, comp_matrix, len(workers), makespan)
 
-            # Calculate communication-to-computation ratios
             avg_comp_cost = np.mean(comp_matrix)
             edge_weights = [dag[u][v].get('weight', 0.0) for u, v in dag.edges()]
             avg_comm_cost = np.mean(edge_weights) if edge_weights else 0.0
@@ -250,7 +244,7 @@ def main():
         print("-" * 70)
 
         # 4.5 Export Human-Readable Schedule Trace Files
-        trace_dir = "outputs/schedules"
+        trace_dir = os.path.join(BASE_DIR, "outputs", "schedules")
         os.makedirs(trace_dir, exist_ok=True)
         trace_file = os.path.join(trace_dir, f"{algo_key}_trace.txt")
         
