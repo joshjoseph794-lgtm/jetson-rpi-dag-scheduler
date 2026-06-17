@@ -12,9 +12,9 @@ from runtime.dispatcher_grpc import GRPCDispatcher
 
 # --- PRODUCTION CLUSTER TOPOLOGY CONFIGURATION ---
 NODES = {
-    "laptop01": {"ip": "192.168.10.1", "port": 50051},
-    "jetson01": {"ip": "192.168.10.3", "port": 50051},
-    "raspi01":  {"ip": "192.168.10.2", "port": 50051}
+    "laptop": {"ip": "192.168.10.1", "port": 50051},
+    "jetson": {"ip": "192.168.10.3", "port": 50051},
+    "raspberry_pi":  {"ip": "192.168.10.2", "port": 50051}
 }
 
 # Align task keys precisely with your task_registry.json manifest
@@ -78,7 +78,7 @@ print("\n\n📡 STARTING NETWORK BANDWIDTH PROFILER (iperf3)...")
 print("=========================================================")
 
 for node_name, node_info in NODES.items():
-    if node_name == "laptop01" or node_info["ip"] == "127.0.0.1":
+    if node_name == "laptop" or node_info["ip"] == "192.168.10.1":
         worst_case_network[node_name] = {"latency_ms": 0.1, "bandwidth_mbps": 10000.0}
         continue
         
