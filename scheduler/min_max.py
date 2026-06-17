@@ -3,7 +3,8 @@ import networkx as nx
 import numpy as np
 from scheduler.heft import calculate_est_eft
 
-def allocate_tasks_min_max(dag, comp_matrix, workers):
+# --- ADDED AVG_BANDWIDTH TO MATCH THE BENCHMARK SIGNATURE CONTRACT ---
+def allocate_tasks_min_max(dag, comp_matrix, avg_bandwidth, workers):
     """
     Main entry point for the Min-Max Heuristic Scheduling Algorithm.
     Returns:

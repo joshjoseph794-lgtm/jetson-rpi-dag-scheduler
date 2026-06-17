@@ -4,7 +4,7 @@ import numpy as np
 import random
 from scheduler.heft import calculate_est_eft
 
-def allocate_tasks_round_robin(dag, comp_matrix, workers):
+def allocate_tasks_round_robin(dag, comp_matrix, avg_bandwidth, workers):
     """
     Allocates tasks sequentially to processors in a circular, round-robin loop.
     Enforces a strict topological order to respect parent dependencies.
@@ -15,6 +15,7 @@ def allocate_tasks_round_robin(dag, comp_matrix, workers):
     
     for idx, task in enumerate(nx.topological_sort(dag)):
         proc = idx % num_processors
+        
         est = calculate_est_eft(dag, task, proc, processor_free_time, schedule_results, workers)
         eft = est + comp_matrix[task][proc]
         
@@ -24,7 +25,7 @@ def allocate_tasks_round_robin(dag, comp_matrix, workers):
     makespan = max([times[2] for times in schedule_results.values()]) if schedule_results else 0.0
     return makespan, schedule_results
 
-def allocate_tasks_min_min(dag, comp_matrix, workers):
+def allocate_tasks_min_min(dag, comp_matrix, avg_bandwidth, workers):
     """
     Min-Min Heuristic: Out of all ready tasks, finds their minimum EFT across 
     all processors, then schedules the task with the absolute minimum overall EFT.
@@ -65,7 +66,7 @@ def allocate_tasks_min_min(dag, comp_matrix, workers):
     makespan = max([times[2] for times in schedule_results.values()]) if schedule_results else 0.0
     return makespan, schedule_results
 
-def allocate_tasks_random(dag, comp_matrix, workers, seed=101):
+def allocate_tasks_random(dag, comp_matrix, avg_bandwidth, workers, seed=101):
     """
     Allocates ready tasks to a completely randomized cluster node processor.
     Provides a baseline to demonstrate the performance benefits of smart heuristics.

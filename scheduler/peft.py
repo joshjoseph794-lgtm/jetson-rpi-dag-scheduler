@@ -47,7 +47,8 @@ def calculate_oct_matrix(dag, comp_matrix, workers):
                 oct_table[node, p_w] = max(succ_costs) if succ_costs else 0.0
     return oct_table
 
-def allocate_tasks_peft(dag, comp_matrix, workers):
+# --- ADDED AVG_BANDWIDTH TO MATCH THE BENCHMARK SIGNATURE CONTRACT ---
+def allocate_tasks_peft(dag, comp_matrix, avg_bandwidth, workers):
     """
     Main entry point for Predict Earliest Finish Time (PEFT) scheduling algorithm.
     Returns:

@@ -6,36 +6,36 @@
       "algorithm": "baseline",
       "metrics": {
         "makespan_seconds_avg": 6.9,
-        "scheduling_length_ratio_avg": 1.5333333333333334,
-        "parallel_speedup_avg": 0.6521739130434783,
-        "cluster_processor_utilization_avg": 0.21739130434782608,
+        "scheduling_length_ratio_avg": 1.1500000000000001,
+        "parallel_speedup_avg": 0.8695652173913043,
+        "cluster_processor_utilization_avg": 0.28985507246376807,
         "communication_to_computation_ratio_avg": 1.0
       }
     },
     "exp_02_heft_vision": {
       "algorithm": "heft",
       "metrics": {
-        "makespan_seconds_avg": 4.5,
-        "scheduling_length_ratio_avg": 1.0,
-        "parallel_speedup_avg": 1.0,
-        "cluster_processor_utilization_avg": 0.3333333333333333,
+        "makespan_seconds_avg": 5.7,
+        "scheduling_length_ratio_avg": 0.95,
+        "parallel_speedup_avg": 1.0526315789473684,
+        "cluster_processor_utilization_avg": 0.3508771929824561,
         "communication_to_computation_ratio_avg": 1.0
       }
     },
     "exp_03_peft_vision": {
       "algorithm": "peft",
       "metrics": {
-        "makespan_seconds_avg": 4.5,
-        "scheduling_length_ratio_avg": 1.0,
-        "parallel_speedup_avg": 1.0,
-        "cluster_processor_utilization_avg": 0.3333333333333333,
+        "makespan_seconds_avg": 5.7,
+        "scheduling_length_ratio_avg": 0.95,
+        "parallel_speedup_avg": 1.0526315789473684,
+        "cluster_processor_utilization_avg": 0.3508771929824561,
         "communication_to_computation_ratio_avg": 1.0
       }
     },
     "exp_04_cpop_vision": {
       "algorithm": "cpop",
       "metrics": {
-        "makespan_seconds_avg": 4.5,
+        "makespan_seconds_avg": 6.0,
         "scheduling_length_ratio_avg": 1.0,
         "parallel_speedup_avg": 1.0,
         "cluster_processor_utilization_avg": 0.3333333333333333,
@@ -45,10 +45,10 @@
     "exp_05_minmax_vision": {
       "algorithm": "min-max",
       "metrics": {
-        "makespan_seconds_avg": 4.5,
-        "scheduling_length_ratio_avg": 1.0,
-        "parallel_speedup_avg": 1.0,
-        "cluster_processor_utilization_avg": 0.3333333333333333,
+        "makespan_seconds_avg": 5.7,
+        "scheduling_length_ratio_avg": 0.95,
+        "parallel_speedup_avg": 1.0526315789473684,
+        "cluster_processor_utilization_avg": 0.3508771929824561,
         "communication_to_computation_ratio_avg": 1.0
       }
     },

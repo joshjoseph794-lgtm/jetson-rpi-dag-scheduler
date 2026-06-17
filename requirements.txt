@@ -1,5 +1,14 @@
+# --- CORE MATHEMATICS & GRAPH DATA STRUCTURES ---
 numpy==2.2.2
 networkx==3.4.2
+
+# --- TELEMETRY GRAPHING & VISUALIZATION ---
 matplotlib==3.10.0
+
+# --- HARDWARE POLLING & LEGACY BACKUP TESTING ---
 psutil==6.1.1
 requests==2.32.3
+
+# --- HIGH-PERFORMANCE GRPC ORCHESTRATION ENGINE ---
+grpcio==1.68.1
+grpcio-tools==1.68.1

@@ -35,7 +35,8 @@ def calculate_downward_ranks(dag, comp_matrix, workers):
             
     return ranks_d
 
-def allocate_tasks_cpop(dag, comp_matrix, workers):
+# --- ADDED AVG_BANDWIDTH TO MATCH THE BENCHMARK SIGNATURE CONTRACT ---
+def allocate_tasks_cpop(dag, comp_matrix, avg_bandwidth, workers):
     """
     Main entry point for Critical Path On a Processor (CPOP) Scheduling Algorithm.
     Guarantees parent dependencies are allocated before children.

@@ -1,9 +1,27 @@
 # remote_worker.py
+
+# ==================================================================================
+# ⚠️ LEGACY BACKUP SYSTEM INTERFACE — DO NOT USE FOR CORE BENCHMARKS
+# ==================================================================================
+# Purpose: This script serves strictly as an alternative, lightweight HTTP-driven 
+#          worker daemon wrapper. 
+#
+# Context: The primary production system relies exclusively on high-performance gRPC 
+#          channels (`runtime/worker.py`) to manage distributed DAG execution. 
+#          gRPC is required to interface with hardware telemetry suites 
+#          (Tegrastats / Power Meters).
+#
+# Usage:   Keep this file intact as an isolated fallback utility for network health 
+#          checks, debugging network firewalls, or running baseline execution tests 
+#          without compiling Protobuf dependencies.
+# ==================================================================================
+
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import time
 import subprocess
 import sys
+import os
 
 class TaskHandler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -13,14 +31,24 @@ class TaskHandler(BaseHTTPRequestHandler):
         
         task_id = payload.get("task_id", "unknown")
         task_type = payload.get("task_type", "unknown")
-        script_path = payload.get("script_path", "")
-        allocated_duration = str(payload.get("payload_duration", "1.5"))
         
-        # --- PHASE 4 UPGRADE: EXTRACT SCHEDULED START TIME ---
+        # Safe fallback: if the incoming manifest specifies an unmapped path, point to your synthetic engine
+        script_path = payload.get("script_path", "")
+        if not script_path or not os.path.exists(script_path):
+            script_path = "workloads/synthetic/cpu_task.py"
+            
+        # Match production schema defaults 
+        allocated_duration = str(payload.get("payload_duration", "2.0"))
+        
+        # --- EXTRACT SCHEDULED START TIME SAFELY ---
         scheduled_start_time_str = payload.get("scheduled_start_time", "0.0")
-        scheduled_start_time = float(scheduled_start_time_str)
+        try:
+            scheduled_start_time = float(scheduled_start_time_str)
+        except (ValueError, TypeError):
+            scheduled_start_time = 0.0
         
         print(f"\n📥 [WORKER] HTTP POST Received - Task {task_id} ({task_type})")
+        print(f"📂 [WORKER] Script Target: {script_path} | Window: {allocated_duration}s")
         
         # --- THE TIME-TRIGGERED CLOCK GATE ---
         if scheduled_start_time > 0.0:
@@ -36,7 +64,7 @@ class TaskHandler(BaseHTTPRequestHandler):
             else:
                 print(f"⚠️ [CLOCK GATE] Task arrived late by {current_time - scheduled_start_time:.4f}s. Executing immediately.")
         
-        execution_time = 1.50
+        execution_time = 2.00
         status_flag = "SUCCESS"
         error_msg = ""
         
@@ -89,9 +117,6 @@ def run(port=5000):
         httpd.server_close()
 
 if __name__ == '__main__':
-    # --- DYNAMIC PORT UPGRADE ---
-    # Allows passing port via CLI argument: `python3 remote_worker.py 5001`
-    # Defaults to port 5000 if no arguments are provided
     target_port = 5000
     if len(sys.argv) > 1:
         try:

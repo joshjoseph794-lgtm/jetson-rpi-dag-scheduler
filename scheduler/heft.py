@@ -59,12 +59,13 @@ def calculate_est_eft(dag, task, proc, processor_free_time, schedule_results, wo
         
     return max(avail_time_processor, max_data_arrival_time)
 
-def allocate_tasks_heft(dag, comp_matrix, workers):
+# --- ADDED AVG_BANDWIDTH TO MATCH THE BENCHMARK SIGNATURE CONTRACT ---
+def allocate_tasks_heft(dag, comp_matrix, avg_bandwidth, workers):
     """
     Main entry point for HEFT Scheduling Heuristic.
     Returns:
-       makespan (float): The total execution length boundary.
-       schedule_results (dict): Mapping of task_idx -> (processor_idx, est, eft)
+        makespan (float): The total execution length boundary.
+        schedule_results (dict): Mapping of task_idx -> (processor_idx, est, eft)
     """
     num_processors = comp_matrix.shape[1]
     processor_free_time = np.zeros(num_processors)

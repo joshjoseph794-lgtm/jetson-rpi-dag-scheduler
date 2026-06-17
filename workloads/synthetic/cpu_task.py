@@ -21,20 +21,23 @@ def main():
     # Run an active-wait loop instead of time.sleep to simulate actual CPU crunching
     while (time.perf_counter() - start_time) < args.duration:
         # Performing basic arithmetic operations continuously to generate real CPU load
+        # Volatile assignment prevents modern JIT compilers from optimizing out the unused variable
         _ = 9999.0 * 9999.0
         
     elapsed = time.perf_counter() - start_time
     
     # 3. Dynamic output logging based on pipeline contextual flags
-    if "Capture" in args.task:
+    task_name_upper = args.task.upper()
+    
+    if "CAPTURE" in task_name_upper:
         print("📸 [SUCCESS] Video frame matrix latched into buffer memory.")
-    elif "Resize" in args.task or "Preprocess" in args.task:
+    elif "RESIZE" in task_name_upper or "PREPROCESS" in task_name_upper:
         print("📐 [SUCCESS] High-definition matrix scaled down to 416x416 resolution.")
-    elif "DNN" in args.task or "Detect" in args.task:
+    elif "DNN" in task_name_upper or "DETECT" in task_name_upper:
         print("🧠 [SUCCESS] TensorRT engine inference pass complete. Detected objects mapped cleanly.")
-    elif "Overlay" in args.task or "Track" in args.task:
+    elif "OVERLAY" in task_name_upper or "TRACK" in task_name_upper:
         print("🎨 [SUCCESS] Rendered bounding box coordinates onto display canvas.")
-    elif "Logging" in args.task:
+    elif "LOGGING" in task_name_upper:
         print("💾 [SUCCESS] Metric logs committed to relational database cluster.")
     else:
         print("✅ [SUCCESS] Execution block completed cleanly.")

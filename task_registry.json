@@ -1,18 +1,42 @@
 {
-    "Data_Preprocessing": {
-        "script_path": "workloads/synthetic/cpu_task.py",
-        "default_data_size_mb": 2.0
-    },
-    "Feature_Extraction": {
-        "script_path": "workloads/synthetic/cpu_task.py",
-        "default_data_size_mb": 1.5
-    },
-    "Model_Training": {
-        "script_path": "workloads/synthetic/cpu_task.py",
-        "default_data_size_mb": 0.5
-    },
-    "Data_Anomaly_Filter": {
-        "script_path": "workloads/synthetic/filter_task.py",
-        "default_data_size_mb": 1.2
-    }
+  "Capture": {
+    "script_path": "workloads/synthetic/cpu_task.py",
+    "default_data_size_mb": 5.0
+  },
+  "Resize": {
+    "script_path": "workloads/synthetic/cpu_task.py",
+    "default_data_size_mb": 2.0
+  },
+  "Preprocess": {
+    "script_path": "workloads/synthetic/cpu_task.py",
+    "default_data_size_mb": 2.0
+  },
+  "DNN_Inference": {
+    "script_path": "workloads/synthetic/cpu_task.py",
+    "default_data_size_mb": 40.0
+  },
+  "Detect": {
+    "script_path": "workloads/synthetic/cpu_task.py",
+    "default_data_size_mb": 40.0
+  },
+  "Track": {
+    "script_path": "workloads/synthetic/cpu_task.py",
+    "default_data_size_mb": 1.5
+  },
+  "Logging": {
+    "script_path": "workloads/synthetic/cpu_task.py",
+    "default_data_size_mb": 0.5
+  },
+  "Data_Preprocessing": {
+    "script_path": "workloads/synthetic/cpu_task.py",
+    "default_data_size_mb": 2.0
+  },
+  "Feature_Extraction": {
+    "script_path": "workloads/synthetic/cpu_task.py",
+    "default_data_size_mb": 1.5
+  },
+  "Model_Training": {
+    "script_path": "workloads/synthetic/cpu_task.py",
+    "default_data_size_mb": 0.5
+  }
 }

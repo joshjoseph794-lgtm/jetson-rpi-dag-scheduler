@@ -35,7 +35,6 @@
       "workload_dag": "execution_pipeline.json",
       "enabled": true
     },
-
     {
       "experiment_id": "exp_energy_heft",
       "algorithm": "heft",
@@ -43,20 +42,16 @@
       "enabled": true
     },
     {
-      
       "experiment_id": "exp_diamond_heft",
       "algorithm": "heft",
       "workload_dag": "dags/toy_diamond.json",
       "enabled": true
-
     },
     {
       "experiment_id": "exp_vision_heavy_heft",
       "algorithm": "heft",
       "workload_dag": "dags/vision_pipeline.json",
       "enabled": true
- 
-
     }
   ]
 }

@@ -1,0 +1,14 @@
+{
+    "laptop01": {
+        "latency_ms": 0.1,
+        "bandwidth_mbps": 10000.0
+    },
+    "jetson01": {
+        "latency_ms": 0.1,
+        "bandwidth_mbps": 10000.0
+    },
+    "raspi01": {
+        "latency_ms": 0.1,
+        "bandwidth_mbps": 10000.0
+    }
+}

@@ -1,6 +1,6 @@
 === PHYSICAL SCHEDULE TRACE FOR LOG: EXP_04_CPOP_VISION ===
 Algorithm Strategy: CPOP
-Calculated Pipeline Makespan: 4.5000s
+Calculated Pipeline Makespan: 6.0000s
 Workload Profile CCR Value : 1.0000
 ------------------------------------------------------------
 Task Index   | Assigned Node   | EST (s)    | EFT (s)   
@@ -8,3 +8,4 @@ Task Index   | Assigned Node   | EST (s)    | EFT (s)
 Task 0       | laptop          | 0.0000     | 1.5000    
 Task 1       | laptop          | 1.5000     | 3.0000    
 Task 2       | laptop          | 3.0000     | 4.5000    
+Task 3       | laptop          | 4.5000     | 6.0000    
