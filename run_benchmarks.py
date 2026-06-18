@@ -31,15 +31,16 @@ ALGORITHM_REGISTRY = {
     "round_robin": allocate_tasks_round_robin,
     "min_min": allocate_tasks_min_min,
     "random": allocate_tasks_random,
+    
     "heft": allocate_tasks_heft,                 
     "peft": allocate_tasks_peft,                 
     "cpop": allocate_tasks_cpop,                 
+    
     "min-max": allocate_tasks_min_max            
 }
 
 def load_json_asset(filepath):
-    """Safely loads a JSON file from disk using absolute pathing."""
-    # Ensure we use absolute paths if a relative one is provided
+    """Safely loads a JSON file from disk using absolute pathing safeguards."""
     if not os.path.isabs(filepath):
         filepath = os.path.join(BASE_DIR, filepath)
         
@@ -158,11 +159,11 @@ def main():
     global_settings = matrix_cfg.get("global_settings", {})
     iterations = global_settings.get("iterations_per_config", 1)
     
-    # Resolve absolute log path
+    # Resolve absolute log path tracking
     raw_log_file = global_settings.get("metrics_log_file", "outputs/benchmark_results.json")
     output_log_file = raw_log_file if os.path.isabs(raw_log_file) else os.path.join(BASE_DIR, raw_log_file)
     
-    # Passing the absolute BASE_DIR down to your CostModel to clean up file-not-found warnings
+    # Force the CostModel instance to search explicitly inside our configs directory
     cost_model = CostModel(profile_dir=os.path.join(BASE_DIR, "configs"))
     
     benchmark_report = {
@@ -206,8 +207,8 @@ def main():
         # 3. Statistical Execution Loop
         for i in range(iterations):
             scheduler_func = ALGORITHM_REGISTRY[algo_key]
-            makespan, schedule_results = scheduler_func(dag, comp_matrix, avg_bandwidth, workers)
             
+            makespan, schedule_results = scheduler_func(dag, comp_matrix, avg_bandwidth, workers)
             slr = calculate_scheduling_length_ratio(makespan, dag, comp_matrix)
             speedup = calculate_speedup(makespan, comp_matrix)
             pu = calculate_processor_utilization(schedule_results, comp_matrix, len(workers), makespan)
