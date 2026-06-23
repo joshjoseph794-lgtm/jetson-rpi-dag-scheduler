@@ -35,8 +35,7 @@ ALGORITHM_REGISTRY = {
     "heft": allocate_tasks_heft,                 
     "peft": allocate_tasks_peft,                 
     "cpop": allocate_tasks_cpop,                 
-    
-    "min-max": allocate_tasks_min_max            
+    "min-max": allocate_tasks_min_max          
 }
 
 def load_json_asset(filepath):
@@ -133,17 +132,43 @@ def calculate_processor_utilization(schedule, W, num_workers, makespan):
         total_active_computation += W[task_idx, p_idx]
     return total_active_computation / (num_workers * makespan)
 
+def extract_avg_bandwidth_from_profiles(profiles_data, default_fallback=95.0):
+    """
+    Dynamically extracts communication time coefficients from profiles 
+    and converts them back into an active average Mbps value for the scheduler functions.
+    """
+    try:
+        matrix = profiles_data.get("communication_profiles", {}).get("matrix", {})
+        latencies = []
+        
+        for source, destinations in matrix.items():
+            for dest, latency_val in destinations.items():
+                if source != dest and latency_val > 0:
+                    latencies.append(latency_val)
+                    
+        if not latencies:
+            return default_fallback
+            
+        # Reverse calculation: Bandwidth (Mbps) = (Avg Payload 2.25MB * 8) / Time (Seconds)
+        avg_latency_seconds = np.mean(latencies)
+        calculated_bandwidth = (2.25 * 8) / avg_latency_seconds
+        return float(calculated_bandwidth)
+        
+    except Exception:
+        return default_fallback
+
 def main():
     print("======================================================================")
     print(" EDGE CLUSTER METRICS INTEGRATION & BENCHMARK HARNESS STARTED")
     print("======================================================================\n")
 
-    avg_bandwidth = 117.0  
-
     # 1. Load Configurations and Infrastructure Lists
     try:
         matrix_cfg = load_json_asset("configs/experiment_matrix.json")
         workers_raw = load_json_asset("configs/cluster_nodes.json")
+        
+        # Explicitly targeted to read the direct output of profile_cluster.py
+        profiles_raw = load_json_asset("configs/worst_case_network.json")
         
         if isinstance(workers_raw, list):
             workers = workers_raw
@@ -155,6 +180,10 @@ def main():
     except Exception as e:
         print(f" Initialization aborted: {e}")
         return
+
+    # Automatically derive bandwidth directly from your updated Ethernet profile values
+    avg_bandwidth = extract_avg_bandwidth_from_profiles(profiles_raw, default_fallback=95.0)
+    print(f" ⚙️ System Profile: Detected Ethernet Baseline Performance ~ {avg_bandwidth:.2f} Mbps\n")
 
     global_settings = matrix_cfg.get("global_settings", {})
     iterations = global_settings.get("iterations_per_config", 1)

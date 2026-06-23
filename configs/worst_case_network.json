@@ -1,14 +1,21 @@
 {
-    "laptop01": {
-        "latency_ms": 0.1,
-        "bandwidth_mbps": 10000.0
-    },
-    "jetson01": {
-        "latency_ms": 0.1,
-        "bandwidth_mbps": 10000.0
-    },
-    "raspi01": {
-        "latency_ms": 0.1,
-        "bandwidth_mbps": 10000.0
+    "communication_profiles": {
+        "matrix": {
+            "laptop": {
+                "laptop": 0.0,
+                "jetson": 0.1837,
+                "raspberry_pi": 0.1936
+            },
+            "jetson": {
+                "laptop": 0.1837,
+                "jetson": 0.0,
+                "raspberry_pi": 0.21
+            },
+            "raspberry_pi": {
+                "laptop": 0.1936,
+                "jetson": 0.21,
+                "raspberry_pi": 0.0
+            }
+        }
     }
 }

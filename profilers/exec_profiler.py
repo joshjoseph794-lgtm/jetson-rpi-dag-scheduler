@@ -32,10 +32,9 @@ def profile_execution(script_path, *args):
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True,
-            timeout=120  # 2-minute safety guardrail timeout per task
+            universal_newlines=True,  # <-- Change text=True to this
+            timeout=120  
         )
-        
         end_time = time.perf_counter()
         duration = end_time - start_time
         

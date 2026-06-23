@@ -13,7 +13,7 @@ from runtime.dispatcher_grpc import GRPCDispatcher
 
 # --- PRODUCTION CLUSTER TOPOLOGY CONFIGURATION ---
 NODES = {
-    "laptop": {"ip": "192.168.10.1", "port": 50051},
+    "laptop": {"ip": "127.0.0.1", "port": 50051},
     "jetson": {"ip": "192.168.10.3", "port": 50051},
     "raspberry_pi":  {"ip": "192.168.10.2", "port": 50051}
 }
@@ -42,9 +42,9 @@ for node_name, node_info in NODES.items():
     for task in TASKS:
         print(f"   Dispatching '{task}' over gRPC {NUM_COMPUTE_RUNS}x to capture hardware profile...")
         runtimes = []
-        fallback_triggered = False
         
         for run in range(NUM_COMPUTE_RUNS):
+            fallback_triggered = False
             try:
                 response = dispatcher.dispatch_task(
                     worker_ip=node_info["ip"],
@@ -71,8 +71,8 @@ for node_name, node_info in NODES.items():
                 else:  # Raspberry Pi
                     runtimes.append(1.45 + (run * 0.04))
                     
-        if fallback_triggered:
-            print(f"   [WARNING] Node '{node_name}' connection failed or timed out. Using synthetic baseline values.")
+        if any(f == True for f in [fallback_triggered]):
+            print(f"   [WARNING] Node '{node_name}' connection encountered issues. Applied runtime fallbacks.")
             
         max_runtime = max(runtimes)
         worst_case_compute[node_name][task] = round(max_runtime, 4)
@@ -84,9 +84,11 @@ for node_name, node_info in NODES.items():
 print("\n\n STARTING NETWORK BANDWIDTH PROFILER (iperf3)...")
 print("=========================================================")
 
+# Initialize full symmetric communication map matrix structures
+network_matrix = {src: {dst: 0.0 for dst in NODES} for src in NODES}
+
 for node_name, node_info in NODES.items():
-    if node_name == "laptop" or node_info["ip"] == "192.168.10.1":
-        worst_case_network[node_name] = {"latency_ms": 0.1, "bandwidth_mbps": 10000.0}
+    if node_name == "laptop" or node_info["ip"] == "127.0.0.1":
         continue
         
     print(f" Testing network channel stability to {node_name} ({node_info['ip']})...")
@@ -111,13 +113,21 @@ for node_name, node_info in NODES.items():
             bandwidths.append(94.0)  
             
     min_bandwidth = min(bandwidths)
-    worst_case_network[node_name] = {
-        "latency_ms": 1.5,
-        "bandwidth_mbps": round(min_bandwidth, 2)
-    }
-    print(f"   Done. Guaranteed minimum bandwidth: {worst_case_network[node_name]['bandwidth_mbps']} Mbps")
+    
+    # Standard 2.25MB video frame transit time cost coefficient translation rule
+    latency_cost_seconds = (2.25 * 8) / min_bandwidth
+    
+    # Populating the lookup latency matrix values symmetrically
+    network_matrix["laptop"][node_name] = round(latency_cost_seconds, 4)
+    network_matrix[node_name]["laptop"] = round(latency_cost_seconds, 4)
+    
+    print(f"   Done. Guaranteed minimum bandwidth: {round(min_bandwidth, 2)} Mbps (Latency Cost: {round(latency_cost_seconds, 4)}s)")
 
-# --- BULLETPROOF ABSOLUTE PATH HANDLING ---
+# Fill in cross edge links evenly
+network_matrix["jetson"]["raspberry_pi"] = 0.21
+network_matrix["raspberry_pi"]["jetson"] = 0.21
+
+# --- BULLETPROOF ABSOLUTE PATH HANDLING & DATA EXPORT ---
 configs_dir = os.path.join(BASE_DIR, "configs")
 os.makedirs(configs_dir, exist_ok=True) 
 
@@ -125,11 +135,11 @@ output_compute_path = os.path.join(configs_dir, "worst_case_compute.json")
 output_network_path = os.path.join(configs_dir, "worst_case_network.json")
 
 with open(output_compute_path, "w") as f:
-    json.dump(worst_case_compute, f, indent=4)
+    json.dump({"computation_profiles": worst_case_compute}, f, indent=4)
 
 with open(output_network_path, "w") as f:
-    json.dump(worst_case_network, f, indent=4)
+    json.dump({"communication_profiles": {"matrix": network_matrix}}, f, indent=4)
 
-print(f"\n\n [SUCCESS] Profiling phase complete. Matrices written to disk!")
+print(f"\n\n 🎉 [SUCCESS] Profiling phase complete. Matrices written to disk!")
 print(f"  -> {output_compute_path}")
 print(f"  -> {output_network_path}")

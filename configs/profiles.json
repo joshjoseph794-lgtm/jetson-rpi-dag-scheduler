@@ -18,9 +18,9 @@
   },
   "communication_profiles": {
     "matrix": {
-      "laptop": { "laptop": 0.0, "jetson": 1.5, "raspberry_pi": 2.1 },
-      "jetson": { "laptop": 1.5, "jetson": 0.0, "raspberry_pi": 1.8 },
-      "raspberry_pi": { "laptop": 2.1, "jetson": 1.8, "raspberry_pi": 0.0 }
+      "laptop": { "laptop": 0.0, "jetson": 0.19, "raspberry_pi": 0.21 },
+      "jetson": { "laptop": 0.19, "jetson": 0.0, "raspberry_pi": 0.21 },
+      "raspberry_pi": { "laptop": 0.21, "jetson": 0.21, "raspberry_pi": 0.0 }
     }
   }
 }

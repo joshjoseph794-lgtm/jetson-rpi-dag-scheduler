@@ -1,20 +1,22 @@
 {
-    "laptop01": {
-        "Capture": 0.39,
-        "Resize": 0.39,
-        "DNN_Inference": 0.39,
-        "Logging": 0.39
-    },
-    "jetson01": {
-        "Capture": 0.93,
-        "Resize": 0.93,
-        "DNN_Inference": 0.93,
-        "Logging": 0.93
-    },
-    "raspi01": {
-        "Capture": 1.61,
-        "Resize": 1.61,
-        "DNN_Inference": 1.61,
-        "Logging": 1.61
+    "computation_profiles": {
+        "laptop": {
+            "Capture": 2.1613,
+            "Resize": 2.1644,
+            "DNN_Inference": 2.1669,
+            "Logging": 2.2118
+        },
+        "jetson": {
+            "Capture": 2.1359,
+            "Resize": 2.1358,
+            "DNN_Inference": 2.1372,
+            "Logging": 2.1369
+        },
+        "raspberry_pi": {
+            "Capture": 2.1471,
+            "Resize": 2.1001,
+            "DNN_Inference": 2.0997,
+            "Logging": 2.0996
+        }
     }
 }

@@ -39,7 +39,7 @@ class TaskDispatcherServicer(messages_pb2_grpc.TaskDispatcherServicer):
         self.hardware_type = hardware_type
         print(f" [WORKER] Initialized profiling engine optimized for: {self.hardware_type}")
 
-    def ExecuteTask(self, request, context):
+    def DispatchTask(self, request, context):
         task_id = request.task_id
         task_type = request.task_type
         script_path = request.script_path

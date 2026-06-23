@@ -5,7 +5,7 @@ import warnings
 
 from runtime import messages_pb2 as runtime_dot_messages__pb2
 
-GRPC_GENERATED_VERSION = '1.81.0'
+GRPC_GENERATED_VERSION = '1.81.1'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -26,8 +26,7 @@ if _version_not_supported:
 
 
 class TaskDispatcherStub:
-    """Service definition for gRPC orchestration
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
         """Constructor.
@@ -35,18 +34,17 @@ class TaskDispatcherStub:
         Args:
             channel: A grpc.Channel.
         """
-        self.ExecuteTask = channel.unary_unary(
-                '/runtime.TaskDispatcher/ExecuteTask',
+        self.DispatchTask = channel.unary_unary(
+                '/runtime.TaskDispatcher/DispatchTask',
                 request_serializer=runtime_dot_messages__pb2.TaskRequest.SerializeToString,
                 response_deserializer=runtime_dot_messages__pb2.TaskResponse.FromString,
                 _registered_method=True)
 
 
 class TaskDispatcherServicer:
-    """Service definition for gRPC orchestration
-    """
+    """Missing associated documentation comment in .proto file."""
 
-    def ExecuteTask(self, request, context):
+    def DispatchTask(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -55,8 +53,8 @@ class TaskDispatcherServicer:
 
 def add_TaskDispatcherServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'ExecuteTask': grpc.unary_unary_rpc_method_handler(
-                    servicer.ExecuteTask,
+            'DispatchTask': grpc.unary_unary_rpc_method_handler(
+                    servicer.DispatchTask,
                     request_deserializer=runtime_dot_messages__pb2.TaskRequest.FromString,
                     response_serializer=runtime_dot_messages__pb2.TaskResponse.SerializeToString,
             ),
@@ -69,11 +67,10 @@ def add_TaskDispatcherServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class TaskDispatcher:
-    """Service definition for gRPC orchestration
-    """
+    """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def ExecuteTask(request,
+    def DispatchTask(request,
             target,
             options=(),
             channel_credentials=None,
@@ -86,7 +83,7 @@ class TaskDispatcher:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/runtime.TaskDispatcher/ExecuteTask',
+            '/runtime.TaskDispatcher/DispatchTask',
             runtime_dot_messages__pb2.TaskRequest.SerializeToString,
             runtime_dot_messages__pb2.TaskResponse.FromString,
             options,

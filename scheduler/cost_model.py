@@ -3,13 +3,23 @@ import json
 import os
 
 class CostModel:
-    def __init__(self, compute_profile_path="worst_case_compute.json", network_profile_path="worst_case_network.json"):
+    def __init__(self, compute_profile_path="worst_case_compute.json", network_profile_path="worst_case_network.json", **kwargs):
         """
         Initializes the empirical data-driven Cost Model by ingesting true 
         hardware execution benchmarks and network topology profiles.
+        
+        Supports legacy positional file paths as well as directory keyword 
+        injection (e.g., profile_dir=...) used by orchestration scripts.
         """
-        self.compute_profile_path = compute_profile_path
-        self.network_profile_path = network_profile_path
+        # Safely extract directory override if passed via run_benchmarks.py
+        profile_dir = kwargs.get("profile_dir", None)
+        
+        if profile_dir:
+            self.compute_profile_path = os.path.join(profile_dir, "worst_case_compute.json")
+            self.network_profile_path = os.path.join(profile_dir, "worst_case_network.json")
+        else:
+            self.compute_profile_path = compute_profile_path
+            self.network_profile_path = network_profile_path
         
         self.compute_matrix = {}
         self.network_matrix = {}
@@ -18,21 +28,19 @@ class CostModel:
 
     def load_profiles(self):
         """Loads and parses the true profiling JSON matrices from disk."""
-        # 1. Load computation execution profiles
+        # Ensure path strings use the targeted internal attributes set by __init__
         if os.path.exists(self.compute_profile_path):
             with open(self.compute_profile_path, 'r') as f:
                 self.compute_matrix = json.load(f)
         else:
-            print(f" [COST MODEL] Warning: Compute profile missing at {self.compute_profile_path}. Using safe defaults.")
-            self.compute_matrix = {}
-
-        # 2. Load network link bandwidth profiles
-        if os.path.exists(self.network_profile_path):
-            with open(self.network_profile_path, 'r') as f:
-                self.network_matrix = json.load(f)
-        else:
-            print(f" [COST MODEL] Warning: Network profile missing at {self.network_profile_path}. Using safe defaults.")
-            self.network_matrix = {}
+            # Try a direct relative path fallback if the absolute injection isn't reaching the folder
+            fallback_path = os.path.join(os.path.dirname(__file__), "..", "configs", "worst_case_compute.json")
+            if os.path.exists(fallback_path):
+                with open(fallback_path, 'r') as f:
+                    self.compute_matrix = json.load(f)
+            else:
+                print(f" [COST MODEL] Warning: Compute profile missing at {self.compute_profile_path}. Using safe defaults.")
+                self.compute_matrix = {}
 
     def get_computation_cost(self, node_name, task_type):
         """

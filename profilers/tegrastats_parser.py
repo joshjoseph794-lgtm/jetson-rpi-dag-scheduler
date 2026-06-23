@@ -31,7 +31,7 @@ class TegrastatsParser:
                 ['tegrastats', '--interval', str(self.interval)],
                 stdout=self.log_file,
                 stderr=subprocess.DEVNULL,
-                text=True
+                universal_newlines=True
             )
             print(" [TEGRASTATS] Telemetry recording safely bound to disk stream.")
         except FileNotFoundError:
@@ -70,7 +70,11 @@ class TegrastatsParser:
                             gpu_samples.append(int(gpu_match.group(1)))
 
                         # 2. Parse Power Draw in milliwatts
-                        power_match = re.search(r'POM_5V_IN\s+(\d+)mW', line) or re.search(r'VDD_IN\s+(\d+)mW', line)
+                        # Robust to both 'POM_5V_IN 1259/1259' and legacy 'POM_5V_IN 1259mW' formats
+                        power_match = (
+                            re.search(r'POM_5V_IN\s+(\d+)(?:mW|/)', line) or 
+                            re.search(r'VDD_IN\s+(\d+)(?:mW|/)', line)
+                        )
                         if power_match:
                             power_samples.append(int(power_match.group(1)))
             finally:

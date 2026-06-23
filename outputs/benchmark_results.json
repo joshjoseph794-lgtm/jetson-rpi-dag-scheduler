@@ -5,30 +5,30 @@
     "exp_01_baseline_vision": {
       "algorithm": "baseline",
       "metrics": {
-        "makespan_seconds_avg": 6.9,
-        "scheduling_length_ratio_avg": 1.1500000000000001,
-        "parallel_speedup_avg": 0.8695652173913043,
-        "cluster_processor_utilization_avg": 0.28985507246376807,
+        "makespan_seconds_avg": 6.900000000000002,
+        "scheduling_length_ratio_avg": 1.1499999999999997,
+        "parallel_speedup_avg": 0.8695652173913044,
+        "cluster_processor_utilization_avg": 0.28985507246376796,
         "communication_to_computation_ratio_avg": 1.0
       }
     },
     "exp_02_heft_vision": {
       "algorithm": "heft",
       "metrics": {
-        "makespan_seconds_avg": 5.7,
-        "scheduling_length_ratio_avg": 0.95,
-        "parallel_speedup_avg": 1.0526315789473684,
-        "cluster_processor_utilization_avg": 0.3508771929824561,
+        "makespan_seconds_avg": 5.699999999999998,
+        "scheduling_length_ratio_avg": 0.9499999999999998,
+        "parallel_speedup_avg": 1.0526315789473688,
+        "cluster_processor_utilization_avg": 0.350877192982456,
         "communication_to_computation_ratio_avg": 1.0
       }
     },
     "exp_03_peft_vision": {
       "algorithm": "peft",
       "metrics": {
-        "makespan_seconds_avg": 5.7,
-        "scheduling_length_ratio_avg": 0.95,
-        "parallel_speedup_avg": 1.0526315789473684,
-        "cluster_processor_utilization_avg": 0.3508771929824561,
+        "makespan_seconds_avg": 5.699999999999998,
+        "scheduling_length_ratio_avg": 0.9499999999999998,
+        "parallel_speedup_avg": 1.0526315789473688,
+        "cluster_processor_utilization_avg": 0.350877192982456,
         "communication_to_computation_ratio_avg": 1.0
       }
     },
@@ -38,47 +38,17 @@
         "makespan_seconds_avg": 6.0,
         "scheduling_length_ratio_avg": 1.0,
         "parallel_speedup_avg": 1.0,
-        "cluster_processor_utilization_avg": 0.3333333333333333,
+        "cluster_processor_utilization_avg": 0.3333333333333334,
         "communication_to_computation_ratio_avg": 1.0
       }
     },
     "exp_05_minmax_vision": {
       "algorithm": "min-max",
       "metrics": {
-        "makespan_seconds_avg": 5.7,
-        "scheduling_length_ratio_avg": 0.95,
-        "parallel_speedup_avg": 1.0526315789473684,
-        "cluster_processor_utilization_avg": 0.3508771929824561,
-        "communication_to_computation_ratio_avg": 1.0
-      }
-    },
-    "exp_energy_heft": {
-      "algorithm": "heft",
-      "metrics": {
-        "makespan_seconds_avg": 7.2,
-        "scheduling_length_ratio_avg": 0.9600000000000002,
-        "parallel_speedup_avg": 1.0416666666666667,
-        "cluster_processor_utilization_avg": 0.3472222222222222,
-        "communication_to_computation_ratio_avg": 1.0
-      }
-    },
-    "exp_diamond_heft": {
-      "algorithm": "heft",
-      "metrics": {
-        "makespan_seconds_avg": 5.7,
-        "scheduling_length_ratio_avg": 0.95,
-        "parallel_speedup_avg": 1.0526315789473684,
-        "cluster_processor_utilization_avg": 0.3508771929824561,
-        "communication_to_computation_ratio_avg": 1.0
-      }
-    },
-    "exp_vision_heavy_heft": {
-      "algorithm": "heft",
-      "metrics": {
-        "makespan_seconds_avg": 4.5,
-        "scheduling_length_ratio_avg": 1.0,
-        "parallel_speedup_avg": 1.0,
-        "cluster_processor_utilization_avg": 0.3333333333333333,
+        "makespan_seconds_avg": 5.699999999999998,
+        "scheduling_length_ratio_avg": 0.9499999999999998,
+        "parallel_speedup_avg": 1.0526315789473688,
+        "cluster_processor_utilization_avg": 0.350877192982456,
         "communication_to_computation_ratio_avg": 1.0
       }
     }

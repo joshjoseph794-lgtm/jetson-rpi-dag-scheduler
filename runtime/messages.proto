@@ -19,7 +19,6 @@ message TaskResponse {
     string error_message = 4;
 }
 
-// Service definition for gRPC orchestration
 service TaskDispatcher {
-    rpc ExecuteTask (TaskRequest) returns (TaskResponse);
+    rpc DispatchTask (TaskRequest) returns (TaskResponse);
 }

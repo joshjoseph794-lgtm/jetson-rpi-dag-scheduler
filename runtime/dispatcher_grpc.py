@@ -48,7 +48,7 @@ class GRPCDispatcher:
                 start_network_time = time.time()
                 
                 # Execute remote procedure call synchronously across the local network cluster
-                response = stub.ExecuteTask(request, timeout=self.timeout)
+                response = stub.DispatchTask(request, timeout=self.timeout)
                 
                 rtt_latency = time.time() - start_network_time
                 print(f"[gRPC Dispatcher] Execution complete for task '{task_id}' (Network RTT: {rtt_latency:.4f}s)")
